@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:jdbc="http://www.springframework.org/schema/jdbc"
+       profile="standard,temporary"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/jdbc
+	http://www.springframework.org/schema/jdbc/spring-jdbc-4.2.xsd
+	http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.2.xsd">
+
+    <!-- 异常处理器 -->
+    <bean id="exceptionHandler" class="cn.cloudwalk.smartframework.common.exception.ExceptionHandler"/>
+
+    <!-- 文件上传设置 -->
+    <bean id="multipartResolver" class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+        <property name="maxUploadSize" value="134217728"/>
+    </bean>
+
+    <!-- h2 内存数据库 -->
+    <bean id="dataSource4MemoryDB"
+          class="com.mchange.v2.c3p0.ComboPooledDataSource"
+          destroy-method="close">
+        <property name="driverClass" value="org.h2.Driver"/>
+        <!-- 指定 DB_CLOSE_DELAY 用于防止自动清除表 -->
+        <property name="jdbcUrl" value="jdbc:h2:mem:data;DB_CLOSE_DELAY=-1"/>
+        <property name="user" value="h2"/>
+        <property name="password" value=""/>
+        <property name="initialPoolSize" value="10"/>
+        <property name="maxIdleTime" value="30"/>
+        <property name="maxPoolSize" value="100"/>
+        <property name="minPoolSize" value="10"/>
+    </bean>
+
+    <bean id="namedParameterJdbcTemplate4MemoryDB"
+          class="org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate">
+        <constructor-arg name="dataSource" ref="dataSource4MemoryDB"/>
+    </bean>
+
+</beans>

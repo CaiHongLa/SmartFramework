@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:p="http://www.springframework.org/schema/p"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       profile="standard,temporary"
+       xmlns="http://www.springframework.org/schema/beans"
+       xsi:schemaLocation="http://www.springframework.org/schema/mvc
+	http://www.springframework.org/schema/mvc/spring-mvc-4.2.xsd
+	http://www.springframework.org/schema/context 
+	http://www.springframework.org/schema/context/spring-context-4.2.xsd
+	http://www.springframework.org/schema/aop 
+	http://www.springframework.org/schema/aop/spring-aop-4.1.xsd
+	http://www.springframework.org/schema/beans 
+	http://www.springframework.org/schema/beans/spring-beans-4.2.xsd">
+
+    <aop:aspectj-autoproxy proxy-target-class="true"/>
+
+    <!-- 验证规范支持 -->
+    <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
+        <property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>
+    </bean>
+
+    <!-- 自定义 gson 工厂类 -->
+    <bean id="gsonFactoryBeanForMessageConverter"
+          class="cn.cloudwalk.smartframework.common.util.gson.GsonFactoryBeanForMessageConverter"/>
+
+    <mvc:annotation-driven validator="validator">
+        <mvc:message-converters>
+            <bean class="org.springframework.http.converter.json.GsonHttpMessageConverter">
+                <property name="gson">
+                    <bean class="com.google.gson.Gson" factory-bean="gsonFactoryBeanForMessageConverter"
+                          factory-method="getGson"/>
+                </property>
+            </bean>
+        </mvc:message-converters>
+    </mvc:annotation-driven>
+
+    <!-- 注解映射 -->
+    <context:component-scan base-package="cn.cloudwalk.smartframework.core, cn.cloudwalk.cloud_eagle" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <bean
+            class="org.springframework.web.servlet.view.InternalResourceViewResolver"
+            p:viewClass="org.springframework.web.servlet.view.JstlView"
+            p:prefix="/system/"
+            p:suffix=".jsp"/>
+
+</beans>
