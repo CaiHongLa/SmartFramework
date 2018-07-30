@@ -4,6 +4,7 @@ import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDes
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
 import cn.cloudwalk.smartframework.common.util.JsonUtil;
 import cn.cloudwalk.smartframework.common.util.TextUtil;
+import cn.cloudwalk.smartframework.config.SpringContextHolder;
 import cn.cloudwalk.smartframework.rpc.netty.bean.NettyRpcRequest;
 import cn.cloudwalk.smartframework.rpc.netty.codec.SerializationUtil;
 import cn.cloudwalk.smartframework.transport.Channel;
@@ -18,10 +19,9 @@ import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.springframework.cglib.reflect.FastClass;
-import org.springframework.cglib.reflect.FastMethod;
+import org.springframework.util.ReflectionUtils;
 
-import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -105,11 +105,12 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
                     resultMap.put("result", result);
                 } catch (Exception e) {
                     logger.error("处理Rpc请求异常！", e);
-                    String errorMessage = e.getMessage();
-                    if (e instanceof InvocationTargetException) {
-                        errorMessage = ((InvocationTargetException) e).getTargetException().getMessage();
+                    if(e instanceof FrameworkInternalSystemException) {
+                        resultMap.put("error", e);
+                    } else {
+                        String errorMessage = e.getMessage();
+                        resultMap.put("error", new FrameworkInternalSystemException(new SystemExceptionDesc(e, errorMessage)));
                     }
-                    resultMap.put("error", new FrameworkInternalSystemException(new SystemExceptionDesc(e, errorMessage)));
                 }
 
                 //不是单向请求的 在这里把处理结果写回去
@@ -129,19 +130,21 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
      *
      * @param request 请求
      * @return 执行结果
-     * @throws Exception 反射异常
      */
-    private Object handle(String className, String methodName, NettyRpcRequest request) throws Exception {
+    private Object handle(String className, String methodName, NettyRpcRequest request) {
         Object serviceBean = handlers.get(className);
-        if (serviceBean == null) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(className + "无可用服务实例提供者，可能原因为该接口没有实现类 或 实现类未注解为 PublicRpcService"));
+        if (null == serviceBean) {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(className + "服务无可用实现类提供者，可能原因为该接口没有实现类 或 实现类未注解为 PublicRpcService"));
         }
         Class<?> serviceClass = serviceBean.getClass();
+        //使用Spring代理的bean触发Aop响应
+        Object targetBean = SpringContextHolder.getBean(serviceClass);
         Class<?>[] parameterTypes = request.getParameterTypes();
-        Object[] parameters = request.getParameters();
-        FastClass serviceFastClass = FastClass.create(serviceClass);
-        FastMethod serviceFastMethod = serviceFastClass.getMethod(methodName, parameterTypes);
-        return serviceFastMethod.invoke(serviceBean, parameters);
+        Method method = ReflectionUtils.findMethod(serviceClass, methodName, parameterTypes);
+        if(null == method){
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(className + "服务无可用方法，请检查方法名称是否正确"));
+        }
+        return ReflectionUtils.invokeMethod(method, targetBean, request.getParameters());
     }
 
 
