@@ -26,7 +26,7 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class NettySslConfigUtil {
 
-    private static final String CONFIG_NAME = "netty-cfg.properties";
+    private static final String CONFIG_NAME = "application.properties";
     private static final String CERT_PATH = "netty.ssl.cert";
     private static Logger logger = LogManager.getLogger(NettySslConfigUtil.class);
     private static Properties applicationCfg = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir(CONFIG_NAME);

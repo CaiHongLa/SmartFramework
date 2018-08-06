@@ -1,9 +1,9 @@
 package cn.cloudwalk.smartframework.core.dao.datasource;
 
 import cn.cloudwalk.smartframework.common.BaseComponent;
+import cn.cloudwalk.smartframework.common.IConfigurationService;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
-import cn.cloudwalk.smartframework.common.util.FileUtil;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -38,6 +38,10 @@ public class DataSourceHolder extends BaseComponent {
     )
     @Qualifier("dataSource")
     private DynamicDataSource dataSource;
+
+    @Autowired(required = false)
+    private IConfigurationService configurationService;
+
     private IDataSourceStrategy dataSourceStrategy;
 
     public static void change(String key) {
@@ -54,30 +58,28 @@ public class DataSourceHolder extends BaseComponent {
 
     @PostConstruct
     public void checkStrategy() {
-        String CONFIG_FILE_NAME = "data-source.properties";
-        if (!FileUtil.isClassPathFileExist(CONFIG_FILE_NAME)) {
-            logger.info("请注意：没有找到配置文件 " + CONFIG_FILE_NAME + "，可能该项目无需数据库存储，因此一切调用数据库的方法都将会出错");
-        } else {
-            Properties jdbc = FileUtil.loadClassPathProperties(CONFIG_FILE_NAME);
-            if (!jdbc.containsKey("ds.strategy")) {
-                dataSourceStrategy = new DefaultMasterStrategy();
-                logger.warn("没有指定 ds.strategy，已自动启用 " + this.dataSourceStrategy.getClass().getName());
-            } else {
-                try {
-                    String className = jdbc.getProperty("ds.strategy").trim();
-                    Object obj = Class.forName(className).newInstance();
-                    if (obj == null || !(obj instanceof IDataSourceStrategy)) {
-                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("类名（" + className + "）错误，或没有实现自 IDataSourceStrategy，或没有继承自 DataSourceStrategyAdapter"));
-                    }
-
-                    dataSourceStrategy = (IDataSourceStrategy) obj;
-                } catch (Exception e) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
-                }
-            }
-
-            dataSourceStrategy.init();
+        if (null == configurationService) {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService服务不可用，请导入Config组件！"));
         }
+        Properties jdbc = configurationService.getApplicationCfg();
+        if (!jdbc.containsKey("ds.strategy")) {
+            dataSourceStrategy = new DefaultMasterStrategy();
+            logger.warn("没有指定 ds.strategy，已自动启用 " + this.dataSourceStrategy.getClass().getName());
+        } else {
+            try {
+                String className = jdbc.getProperty("ds.strategy").trim();
+                Object obj = Class.forName(className).newInstance();
+                if (!(obj instanceof IDataSourceStrategy)) {
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("类名（" + className + "）错误，或没有实现自 IDataSourceStrategy，或没有继承自 DataSourceStrategyAdapter"));
+                }
+
+                dataSourceStrategy = (IDataSourceStrategy) obj;
+            } catch (Exception e) {
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
+            }
+        }
+
+        dataSourceStrategy.init();
     }
 
     public void regist(String id, Map<String, Object> properties, DataSourceUtil.DATA_SOURCE_TYPE dataSourceType) {
@@ -171,7 +173,7 @@ public class DataSourceHolder extends BaseComponent {
 
                 logger.info("所有数据源均关闭完成（共计 " + dsNames.size() + " 个）");
             }
-        }finally {
+        } finally {
             currDataSource.remove();
         }
     }

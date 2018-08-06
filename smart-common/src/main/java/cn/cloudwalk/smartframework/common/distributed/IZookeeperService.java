@@ -22,7 +22,7 @@ public interface IZookeeperService extends IBaseComponent {
     /**
      * 获取分布式配置文件
      *
-     * @return distributed-config.properties
+     * @return application.properties
      */
     Properties getZookeeperConfig();
 
@@ -81,7 +81,7 @@ public interface IZookeeperService extends IBaseComponent {
     /**
      * 获取根节点路径
      *
-     * @return 配置在distributed-config.properties文件中的zookeeper.rootPath
+     * @return 配置在application.properties文件中的zookeeper.rootPath
      */
     String getRootPath();
 
@@ -96,7 +96,7 @@ public interface IZookeeperService extends IBaseComponent {
      * 获取本机IP
      * 注册服务时使用
      *
-     * @return 配置在distributed-config.properties文件中的zookeeper.localIp
+     * @return 配置在application.properties文件中的system.localIp
      */
     String getLocalIp();
 
@@ -117,7 +117,7 @@ public interface IZookeeperService extends IBaseComponent {
     /**
      * 获取组件ID
      *
-     * @return 配置在distributed-config.properties文件中的zookeeper.id
+     * @return 配置在application.properties文件中的zookeeper.id
      */
     String getId();
 
@@ -210,14 +210,14 @@ public interface IZookeeperService extends IBaseComponent {
     /**
      * 获取Http服务根节点
      *
-     * @return 配置在distributed-config.properties文件中的zookeeper.rootPath + “/http”
+     * @return 配置在application.properties文件中的zookeeper.rootPath + “/http”
      */
     String getHttpServicePath();
 
     /**
      * 获取Rpc服务根节点
      *
-     * @return 配置在distributed-config.properties文件中的zookeeper.rootPath + “/rpc”
+     * @return 配置在application.properties文件中的zookeeper.rootPath + “/rpc”
      */
     String getRpcServicePath();
 
