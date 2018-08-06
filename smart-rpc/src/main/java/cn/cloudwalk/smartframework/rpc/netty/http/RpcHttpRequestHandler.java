@@ -138,7 +138,7 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
         }
         Class<?> serviceClass = serviceBean.getClass();
         //使用Spring代理的bean触发Aop响应
-        Object targetBean = SpringContextHolder.getBean(serviceClass);
+        Object targetBean = SpringContextHolder.getStaticApplicationContext().getBean(serviceClass);
         Class<?>[] parameterTypes = request.getParameterTypes();
         Method method = ReflectionUtils.findMethod(serviceClass, methodName, parameterTypes);
         if(null == method){
