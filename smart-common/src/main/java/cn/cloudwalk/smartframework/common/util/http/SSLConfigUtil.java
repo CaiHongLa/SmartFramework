@@ -25,9 +25,9 @@ import java.util.concurrent.ConcurrentMap;
  */
 public class SSLConfigUtil {
 
-    public static final String DEFAULT_CERT_NAME = "default";
-    public static final String SKIP = "_skip";
-    private static final String CONFIG_NAME = "application-cfg.properties";
+    private static final String DEFAULT_CERT_NAME = "default";
+    private static final String SKIP = "_skip";
+    private static final String CONFIG_NAME = "application.properties";
     private static Logger logger = LogManager.getLogger(SSLConfigUtil.class);
     private static Properties applicationCfg = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir(CONFIG_NAME);
     private static ConcurrentMap<String, SSLContext> context = new ConcurrentHashMap<>();
@@ -35,15 +35,13 @@ public class SSLConfigUtil {
 
     static {
         if (isConfiguredHttps()) {
-            String STRATEGY_KEY = "system.https.sslStrategy";
-            String DEFAULT_STRATEGY_CLASS_NAME = "cn.cloudwalk.smartframework.common.util.http.ssl.DefaultSSLStrategy";
             logger.info("开始初始化 system.https.sslStrategy 策略");
             if (!applicationCfg.containsKey("system.https.sslStrategy")) {
-                logger.info("application-cfg.properties 配置文件中没有找到 system.https.sslStrategy 策略配置项，因此将默认使用 cn.cloudwalk.smartframework.common.util.http.ssl.DefaultSSLStrategy");
+                logger.info("application.properties 配置文件中没有找到 system.https.sslStrategy 策略配置项，因此将默认使用 cn.cloudwalk.smartframework.common.util.http.ssl.DefaultSSLStrategy");
             }
 
             String strategyClass = applicationCfg.getProperty("system.https.sslStrategy", "cn.cloudwalk.smartframework.common.util.http.ssl.DefaultSSLStrategy");
-            if (!TextUtil.isNotEmpty(strategyClass)) {
+            if (TextUtil.isEmpty(strategyClass)) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc("无效的 system.https.sslStrategy 配置值：" + strategyClass));
             }
 
@@ -80,7 +78,7 @@ public class SSLConfigUtil {
     }
 
     private static SSLContext buildSSLContext(String certName) {
-        if ("_skip".equals(certName)) {
+        if (SKIP.equals(certName)) {
             return buildTrustSSLContext();
         } else if (isConfiguredHttps()) {
             logger.info("开始构建 SSLContext 对象（certName=" + certName + "）");
@@ -104,12 +102,12 @@ public class SSLConfigUtil {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
             }
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("配置错误：application-cfg.properties 配置文件中没有指定 https 证书基路径（system.https.certBasePath），因此 SSLContext 构建失败"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("配置错误：application.properties 配置文件中没有指定 https 证书基路径（system.https.certBasePath），因此 SSLContext 构建失败"));
         }
     }
 
     public static String decideCertName(String url, Object params) {
-        return strategy != null ? strategy.decide(url, params) : "default";
+        return strategy != null ? strategy.decide(url, params) : DEFAULT_CERT_NAME;
     }
 
     public static SSLContext getSSLContext(String certName) {

@@ -1,14 +1,14 @@
 package cn.cloudwalk.smartframework.rpc.netty.service;
 
 import cn.cloudwalk.smartframework.common.BaseComponent;
+import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
-import cn.cloudwalk.smartframework.common.netty.config.INettyConfigService;
 import cn.cloudwalk.smartframework.common.util.TextUtil;
+import cn.cloudwalk.smartframework.rpc.netty.INettyRpcService;
 import cn.cloudwalk.smartframework.rpc.netty.http.RpcHttpProtocol;
 import cn.cloudwalk.smartframework.rpc.netty.http.RpcHttpRequestHandler;
 import cn.cloudwalk.smartframework.rpc.netty.http.RpcHttpTransport;
-import cn.cloudwalk.smartframework.rpc.netty.INettyRpcService;
 import cn.cloudwalk.smartframework.rpc.service.holder.IPublicServiceHolder;
 import cn.cloudwalk.smartframework.transport.Protocol;
 import cn.cloudwalk.smartframework.transport.Server;
@@ -37,9 +37,9 @@ import java.util.Properties;
 public class NettyRpcService extends BaseComponent implements INettyRpcService {
     private static final Logger logger = LogManager.getLogger(NettyRpcService.class);
 
-    @Autowired(required = false)
-    @Qualifier("nettyConfigService")
-    private INettyConfigService nettyConfigService;
+    @Autowired
+    @Qualifier("zookeeperService")
+    private IZookeeperService zookeeperService;
 
     @Autowired
     @Qualifier("publicServiceHolder")
@@ -48,20 +48,18 @@ public class NettyRpcService extends BaseComponent implements INettyRpcService {
     private Map<String, String> parameters = new HashMap<>(50);
 
     private Integer port;
-    private String ip;
     private Protocol protocol;
     private Server server;
 
     @PostConstruct
     public void init() {
-        Properties nettyConfig = getNettyConfigService().getNettyConfig();
+        Properties nettyConfig = zookeeperService.getZookeeperConfig();
         String rpcPort = nettyConfig.getProperty(ProtocolConstants.RPC_HTTP_SERVER_PORT);
         if (TextUtil.isEmpty(rpcPort)) {
             logger.error("缺少" + ProtocolConstants.RPC_HTTP_SERVER_PORT + "配置, 无法启动Rpc服务!");
             port = 0;
         }
         port = Integer.parseInt(rpcPort);
-        ip = getNettyConfigService().getLocalIp();
         for (Object key : nettyConfig.keySet()) {
             parameters.put((String) key, (String) nettyConfig.get(key));
         }
@@ -80,6 +78,7 @@ public class NettyRpcService extends BaseComponent implements INettyRpcService {
     @Override
     public void start() {
         try {
+            String ip = zookeeperService.getAvailableLocalIp();
             if (TextUtil.isEmpty(ip)) {
                 return;
             }
@@ -102,12 +101,5 @@ public class NettyRpcService extends BaseComponent implements INettyRpcService {
             protocol.destroy();
         }
         logger.info("关闭Rpc服务完成！");
-    }
-
-    private INettyConfigService getNettyConfigService() {
-        if (nettyConfigService == null) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("INettyConfigService服务不可用，请导入Config组件！"));
-        }
-        return nettyConfigService;
     }
 }

@@ -1,6 +1,7 @@
 package cn.cloudwalk.smartframework.rpc.zookeeper;
 
 import cn.cloudwalk.smartframework.common.BaseComponent;
+import cn.cloudwalk.smartframework.common.IConfigurationService;
 import cn.cloudwalk.smartframework.common.distributed.IServiceDiscoveryStrategy;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperNodeCacheWatcher;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
@@ -52,6 +53,8 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Qualifier("zookeeperNodeCacheWatcher")
     private IZookeeperNodeCacheWatcher zookeeperNodeCacheWatcher;
 
+    @Autowired(required = false)
+    private IConfigurationService configurationService;
 
     public ZookeeperService() {
         this.isStopped = false;
@@ -59,24 +62,23 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
 
     @PostConstruct
     private void loadConfig() {
-        String CONFIG_FILE_NAME = "distributed-config.properties";
-        if (!FileUtil.isFileExistOnClasspathOrConfigDir(CONFIG_FILE_NAME)) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("没有在 classpath 下找到配置文件 " + CONFIG_FILE_NAME));
-        } else {
-            this.zookeeperConfig = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir(CONFIG_FILE_NAME);
-            logger.info("读取配置文件 " + CONFIG_FILE_NAME + " 完成：" + this.zookeeperConfig);
-            String strategy = this.zookeeperConfig.getProperty("zookeeper.service.strategy");
-            if (strategy == null) {
-                strategy = "cn.cloudwalk.smartframework.rpc.service.discovery.adapter.DefaultServiceDiscoveryStrategy";
-                logger.info("没有指定 zookeeper.service.strategy 策略，已自动使用 " + strategy);
-            }
-            try {
-                this.discoveryStrategy = (IServiceDiscoveryStrategy) Class.forName(strategy).newInstance();
-                this.discoveryStrategy.setZookeeperService(this);
-            } catch (IllegalAccessException | ClassNotFoundException | InstantiationException exception) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc(exception));
-            }
+        if (null == configurationService) {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService服务不可用，请导入Config组件！"));
         }
+        this.zookeeperConfig = configurationService.getApplicationCfg();
+        logger.info("开始加载 zookeeper 配置");
+        String strategy = this.zookeeperConfig.getProperty("zookeeper.service.strategy");
+        if (strategy == null) {
+            strategy = "cn.cloudwalk.smartframework.rpc.service.discovery.adapter.DefaultServiceDiscoveryStrategy";
+            logger.info("没有指定 zookeeper.service.strategy 策略，已自动使用 " + strategy);
+        }
+        try {
+            this.discoveryStrategy = (IServiceDiscoveryStrategy) Class.forName(strategy).newInstance();
+            this.discoveryStrategy.setZookeeperService(this);
+        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException exception) {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(exception));
+        }
+        logger.info("加载 zookeeper 配置完成");
     }
 
     @Override
@@ -177,7 +179,7 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
 
     @Override
     public String getLocalIp() {
-        return this.zookeeperConfig.getProperty("zookeeper.localIp");
+        return this.zookeeperConfig.getProperty("system.localIp");
     }
 
     @Override
@@ -382,21 +384,21 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     }
 
     private String getAvailableLocalIpByConfig() {
-        logger.info("开始根据 zookeeper.localIp 配置项获取可用 ip");
-        String ipPattern = this.zookeeperConfig.getProperty("zookeeper.localIp");
+        logger.info("开始根据 system.localIp 配置项获取可用 ip");
+        String ipPattern = this.zookeeperConfig.getProperty("system.localIp");
         Map<String, String> ipList = NetUtil.getAvailableIp();
         logger.info("当前主机的可用 ip 列表为：" + ipList);
         Map<String, String> result = NetUtil.getAvailableIp(ipPattern);
         if (result != null && result.size() != 0) {
             if (result.size() > 1) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("找到多个可用 ip（" + result + "），因此无法继续，可能原因为 zookeeper.localIp 正则配置错误（" + ipPattern + "），导致在可用 ip 列表中匹配到了多个，请检查"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("找到多个可用 ip（" + result + "），因此无法继续，可能原因为 system.localIp 正则配置错误（" + ipPattern + "），导致在可用 ip 列表中匹配到了多个，请检查"));
             } else {
                 Map.Entry<String, String> targetIp = result.entrySet().iterator().next();
                 logger.info("已确定可用 ip 为 " + targetIp.getKey() + "（" + targetIp.getValue() + "）");
                 return targetIp.getKey();
             }
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("没有匹配到可用 ip，当前主机的所有可用 ip 列表为 " + (ipList != null && !ipList.isEmpty() ? ipList.keySet() : "{}") + "，" + "可能原因为 zookeeper.localIp 配置错误（当前配置为 " + ipPattern + "）：" + "1.ip 配置错误，没有包含在当前主机的可用 ip 列表中；" + "2.ip 正则配置错误，因此在所有可用 ip 列表中没有匹配到对象"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("没有匹配到可用 ip，当前主机的所有可用 ip 列表为 " + (ipList != null && !ipList.isEmpty() ? ipList.keySet() : "{}") + "，" + "可能原因为 system.localIp 配置错误（当前配置为 " + ipPattern + "）：" + "1.ip 配置错误，没有包含在当前主机的可用 ip 列表中；" + "2.ip 正则配置错误，因此在所有可用 ip 列表中没有匹配到对象"));
         }
     }
 

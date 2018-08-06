@@ -64,13 +64,13 @@ public class HttpBaseSupportUtil {
     private static Map<String, Object> params;
 
     static {
-        Properties config = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir("application-cfg.properties");
+        Properties config = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir("application.properties");
         if (config != null) {
-            logger.info("加载到配置文件 application-cfg.properties，其内容为 " + config);
+            logger.info("加载到配置文件 application.properties，其内容为 " + config);
             params = PropertiesUtil.filter("system.http.params.", true, config);
             logger.info("过滤后的配置参数为 " + params);
         } else {
-            logger.info("没有加载到配置文件 application-cfg.properties，将使用默认参数进行配置");
+            logger.info("没有加载到配置文件 application.properties，将使用默认参数进行配置");
         }
 
     }

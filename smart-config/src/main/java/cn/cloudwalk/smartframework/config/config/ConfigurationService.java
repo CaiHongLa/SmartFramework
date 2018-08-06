@@ -19,7 +19,7 @@ import java.util.Properties;
 @Component("configurationService")
 public class ConfigurationService extends BaseComponent implements IConfigurationService {
 
-    private static final String APPLICATION_CFG_FILE_NAME = "application-cfg.properties";
+    private static final String APPLICATION_CFG_FILE_NAME = "application.properties";
     private static final Logger logger = LogManager.getLogger(ConfigurationService.class);
     private Properties applicationCfg;
 

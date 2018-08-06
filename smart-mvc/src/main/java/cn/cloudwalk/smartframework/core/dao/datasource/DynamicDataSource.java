@@ -1,23 +1,27 @@
 package cn.cloudwalk.smartframework.core.dao.datasource;
 
+import cn.cloudwalk.smartframework.common.IConfigurationService;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
-import cn.cloudwalk.smartframework.common.util.FileUtil;
 import cn.cloudwalk.smartframework.common.util.PropertiesUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.BeansException;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 import org.springframework.jdbc.datasource.lookup.AbstractRoutingDataSource;
 
 import javax.annotation.PostConstruct;
 import javax.sql.DataSource;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
 
 /**
  * 动态数据源管理
- * 支持将data-source.properties文件中配置的所有数据源加载到spring上下文中，可以在Dao层和Service层动态切换
+ * 支持将application.properties文件中配置的所有数据源加载到spring上下文中，可以在Dao层和Service层动态切换
  *
  * @author LIYANHUI
  * @see org.springframework.jdbc.datasource.AbstractDataSource
@@ -40,6 +44,9 @@ public class DynamicDataSource extends AbstractRoutingDataSource implements Appl
      */
     private Map<Object, Object> loadedDataSources;
 
+    @Autowired(required = false)
+    private IConfigurationService configurationService;
+
     /**
      * 无参构造，初始化一个空的MAP对象
      */
@@ -52,37 +59,34 @@ public class DynamicDataSource extends AbstractRoutingDataSource implements Appl
      */
     @PostConstruct
     public void init() {
-        String PROPERTIES_FILE_NAME = "data-source.properties";
-        if (!FileUtil.isClassPathFileExist(PROPERTIES_FILE_NAME)) {
-            setTargetDataSources(Collections.emptyMap());
-            logger.info("请注意：没有找到配置文件 " + PROPERTIES_FILE_NAME + "，可能该项目无需数据库存储，因此一切调用数据库的方法都将会出错");
-        } else {
-            logger.info("开始注册系统数据源");
-            Properties jdbcConfig = FileUtil.loadClassPathProperties(PROPERTIES_FILE_NAME);
-            if (jdbcConfig != null && jdbcConfig.containsKey("ds.use")) {
-                String use = jdbcConfig.getProperty("ds.use");
-                String major = jdbcConfig.getProperty("ds.major");
-                String[] dataSourceNames = use.split(",");
+        logger.info("开始注册系统数据源");
+        if(null == configurationService){
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService服务不可用，请导入Config组件！"));
+        }
+        Properties jdbcConfig = configurationService.getApplicationCfg();
+        if (jdbcConfig != null && jdbcConfig.containsKey("ds.use")) {
+            String use = jdbcConfig.getProperty("ds.use");
+            String major = jdbcConfig.getProperty("ds.major");
+            String[] dataSourceNames = use.split(",");
 
-                for (String dataSourceName : dataSourceNames) {
-                    String prefix = "ds." + dataSourceName + ".";
-                    String type = jdbcConfig.getProperty(prefix + "type").toUpperCase();
-                    boolean isSupport = DataSourceUtil.DATA_SOURCE_TYPE.containsByName(type);
-                    if (!isSupport) {
-                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("不支持的数据源类型：" + type));
-                    }
-
-                    Map<String, Object> config = PropertiesUtil.filter(prefix, "type|charsetConverter", true, jdbcConfig);
-                    registerDataSource(dataSourceName, config, DataSourceUtil.DATA_SOURCE_TYPE.valueOf(type));
+            for (String dataSourceName : dataSourceNames) {
+                String prefix = "ds." + dataSourceName + ".";
+                String type = jdbcConfig.getProperty(prefix + "type").toUpperCase();
+                boolean isSupport = DataSourceUtil.DATA_SOURCE_TYPE.containsByName(type);
+                if (!isSupport) {
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("不支持的数据源类型：" + type));
                 }
 
-                setDefaultDataSouce(major);
-                setTargetDataSources(loadedDataSources);
-                afterPropertiesSet();
-                logger.info("系统数据源注册完毕");
-            } else {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc(PROPERTIES_FILE_NAME + " 配置错误，没有找到 ds.use 配置项"));
+                Map<String, Object> config = PropertiesUtil.filter(prefix, "type|charsetConverter", true, jdbcConfig);
+                registerDataSource(dataSourceName, config, DataSourceUtil.DATA_SOURCE_TYPE.valueOf(type));
             }
+
+            setDefaultDataSouce(major);
+            setTargetDataSources(loadedDataSources);
+            afterPropertiesSet();
+            logger.info("系统数据源注册完毕");
+        } else {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(" application.properties 配置错误，没有找到 ds.use 配置项"));
         }
     }
 

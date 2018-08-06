@@ -17,19 +17,19 @@ import java.util.Properties;
  */
 public class ProxyConfigUtil {
 
-    private static final String CONFIG_NAME = "application-cfg.properties";
+    private static final String CONFIG_NAME = "application.properties";
     private static Logger logger = LogManager.getLogger(ProxyConfigUtil.class);
     private static boolean isUse;
     private static CredentialsProvider provider;
     private static RequestConfig config;
 
     static {
-        Properties applicationCfg = PropertiesUtil.loadClassPathProperties("application-cfg.properties");
+        Properties applicationCfg = PropertiesUtil.loadClassPathProperties(CONFIG_NAME);
         logger.info("开始初始化代理配置，配置信息为 " + applicationCfg);
         if (applicationCfg.containsKey("system.http.proxy.use")) {
             isUse = Boolean.valueOf(applicationCfg.getProperty("system.http.proxy.use"));
             if (!isUse) {
-                logger.info("注意：application-cfg.properties 中配置了 system.http.proxy.use=false，因此 http proxy 功能被关闭，所有试图使用 http proxy 的功能都将会出错");
+                logger.info("注意：application.properties 中配置了 system.http.proxy.use=false，因此 http proxy 功能被关闭，所有试图使用 http proxy 的功能都将会出错");
             } else {
                 String ip = applicationCfg.getProperty("system.http.proxy.ip");
                 Integer port = Integer.valueOf(applicationCfg.getProperty("system.http.proxy.port"));
@@ -42,7 +42,7 @@ public class ProxyConfigUtil {
 
             logger.info("代理配置初始化完成");
         } else {
-            logger.warn("注意：application-cfg.properties 配置文件中没有配置 proxy，因此所有试图使用 http proxy 的功能都将会出错");
+            logger.warn("注意：application.properties 配置文件中没有配置 proxy，因此所有试图使用 http proxy 的功能都将会出错");
         }
 
         logger.info("代理配置初始化完成");

@@ -1,11 +1,14 @@
 package cn.cloudwalk.smartframework.task;
 
+import cn.cloudwalk.smartframework.common.IConfigurationService;
+import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
+import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
 import cn.cloudwalk.smartframework.common.task.BackgroundTask;
 import cn.cloudwalk.smartframework.common.task.IBackGroundTaskService;
-import cn.cloudwalk.smartframework.common.util.PropertiesUtil;
 import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
@@ -26,9 +29,15 @@ public class BackGroundTaskService implements IBackGroundTaskService {
 
     private static final Logger logger = LogManager.getLogger(BackGroundTaskService.class);
 
+    @Autowired(required = false)
+    private IConfigurationService configurationService;
+
     @PostConstruct
     private void init() {
-        Properties config = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir("application-cfg.properties");
+        if(null == configurationService){
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService服务不可用，请导入Config组件！"));
+        }
+        Properties config = configurationService.getApplicationCfg();
         int value = 1000;
         if (config != null) {
             value = Integer.parseInt(config.getProperty("thread.task.pool", "1000"));
