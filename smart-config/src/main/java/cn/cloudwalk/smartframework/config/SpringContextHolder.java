@@ -27,15 +27,7 @@ public class SpringContextHolder extends BaseComponent {
         SpringContextHolder.applicationContext = applicationContext;
     }
 
-    /**
-     * 获取Bean
-     *
-     * @param clazz
-     * @param <T>
-     * @return
-     */
-    public static <T> Object getBean(Class<T> clazz){
-        return applicationContext.getBean(clazz);
+    public static ApplicationContext getStaticApplicationContext() {
+        return SpringContextHolder.applicationContext;
     }
-
 }
