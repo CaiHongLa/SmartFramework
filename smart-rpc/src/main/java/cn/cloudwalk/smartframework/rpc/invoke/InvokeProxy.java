@@ -88,12 +88,7 @@ public class InvokeProxy<T> implements InvocationHandler, AsyncInvokeProxy {
     }
 
     private String buildUrl(String className, String methodName, String requestId, boolean oneWay){
-        StringBuilder builder = new StringBuilder("http://" + ip + ":" + port + "/");
-        builder.append(className);
-        builder.append("?requestId=").append(requestId);
-        builder.append("&methodName=").append(methodName);
-        builder.append("&oneWay=").append(oneWay);
-        return builder.toString();
+        return "http://" + ip + ":" + port + "/" + className + "?requestId=" + requestId + "&methodName=" + methodName + "&oneWay=" + oneWay;
     }
 
     private String buildRequestId(){
