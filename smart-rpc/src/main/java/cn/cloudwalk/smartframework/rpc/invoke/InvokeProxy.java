@@ -53,7 +53,7 @@ public class InvokeProxy<T> implements InvocationHandler, AsyncInvokeProxy {
             sendRequestOneWay(requestClassName, method.getName(), request);
             return new Object();
         }
-        Class<?> returnClass = Class.forName(returnClassName);
+        Class<?> returnClass = getClassType(returnClassName);
         NettyRpcResponseFuture nettyRpcResponseFuture = sendRequest(returnClass, requestClassName, method.getName(), request);
         NettyRpcResponse response = nettyRpcResponseFuture.get();
         Exception error = response.getError();
@@ -182,6 +182,29 @@ public class InvokeProxy<T> implements InvocationHandler, AsyncInvokeProxy {
                 return Byte.TYPE;
             default:
                 return classType;
+        }
+    }
+
+    private Class<?> getClassType(String className) throws ClassNotFoundException {
+        switch (className) {
+            case "int":
+                return Integer.class;
+            case "long":
+                return Long.class;
+            case "float":
+                return Float.class;
+            case "double":
+                return Double.class;
+            case "char":
+                return Character.class;
+            case "boolean":
+                return Boolean.class;
+            case "short":
+                return Short.class;
+            case "byte":
+                return Byte.class;
+            default:
+                return Class.forName(className);
         }
     }
 }
