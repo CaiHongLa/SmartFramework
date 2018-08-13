@@ -2,6 +2,7 @@ package cn.cloudwalk.smartframework.rpc.netty.http;
 
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
+import cn.cloudwalk.smartframework.common.exception.exception.StandardBusinessException;
 import cn.cloudwalk.smartframework.common.util.JsonUtil;
 import cn.cloudwalk.smartframework.common.util.TextUtil;
 import cn.cloudwalk.smartframework.config.SpringContextHolder;
@@ -104,6 +105,7 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
                     Object result = handle(className, methodName, nettyRpcRequest);
                     resultMap.put("result", result);
                 } catch (Exception e) {
+                    //对于反射到bean的异常 认为是业务处理异常 需要将异常写回到调用方后再将异常在提供方抛出
                     logger.error("处理Rpc请求异常！", e);
                     if(e instanceof FrameworkInternalSystemException) {
                         resultMap.put("error", e);
@@ -111,6 +113,11 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
                         String errorMessage = e.getMessage();
                         resultMap.put("error", new FrameworkInternalSystemException(new SystemExceptionDesc(e, errorMessage)));
                     }
+                    //不是单向请求的 在这里把处理结果写回去
+                    if (!oneWay) {
+                        writeResponse(JsonUtil.object2Json(resultMap), channel);
+                    }
+                    throw e;
                 }
 
                 //不是单向请求的 在这里把处理结果写回去
@@ -149,9 +156,13 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
 
 
     @Override
-    public void caught(Channel channel, Throwable exception) {
+    public void caught(Channel channel, Throwable exception) throws TransportException{
         logger.error(exception);
-        channel.close();
+        if(exception instanceof TransportException) {
+            channel.close();
+            return;
+        }
+        throw new TransportException(channel, exception);
     }
 
     @SuppressWarnings("unchecked")

@@ -31,15 +31,17 @@ public class InvokeProxy<T> implements InvocationHandler, AsyncInvokeProxy {
     private String ip;
     private Integer port;
     private Class<T> clazz;
+    private Class<?> returnClazz;
     /**
      * 单向请求列表 方法返回类型包含在列表里 即为单向请求
      */
     private static final List<String> ONE_WAY_REQUEST_LIST = Arrays.asList("void", "Void");
 
-    public InvokeProxy(String ip, Integer port, Class<T> clazz) {
+    public InvokeProxy(String ip, Integer port, Class<T> clazz,Class<?> returnClazz) {
         this.ip = ip;
         this.port = port;
         this.clazz = clazz;
+        this.returnClazz = returnClazz;
     }
 
     @Override
@@ -48,12 +50,17 @@ public class InvokeProxy<T> implements InvocationHandler, AsyncInvokeProxy {
         request.setParameterTypes(method.getParameterTypes());
         request.setParameters(objects);
         String returnClassName = method.getReturnType().getName();
-        String requestClassName = method.getDeclaringClass().getName().replace(".", "/");
+        String requestClassName = clazz.getName().replace(".", "/");
         if(ONE_WAY_REQUEST_LIST.contains(returnClassName)){
             sendRequestOneWay(requestClassName, method.getName(), request);
             return new Object();
         }
-        Class<?> returnClass = getClassType(returnClassName);
+        Class<?> returnClass;
+        if(null == returnClazz) {
+            returnClass = getClassType(returnClassName);
+        } else {
+            returnClass = returnClazz;
+        }
         NettyRpcResponseFuture nettyRpcResponseFuture = sendRequest(returnClass, requestClassName, method.getName(), request);
         NettyRpcResponse response = nettyRpcResponseFuture.get();
         Exception error = response.getError();

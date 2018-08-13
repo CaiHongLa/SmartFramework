@@ -94,7 +94,7 @@ public class HttpChannel extends AbstractChannel {
         }
 
         if (!success) {
-            throw new IllegalStateException("发现消息：" + message + " 到 " + getRemoteAddress()
+            throw new TransportException(this, "发送消息：" + message + " 到 " + getRemoteAddress()
                     + "，超时：" + timeout + "ms");
         }
     }
