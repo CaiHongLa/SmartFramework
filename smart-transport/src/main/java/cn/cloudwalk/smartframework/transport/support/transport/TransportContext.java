@@ -70,7 +70,7 @@ public final class TransportContext implements Serializable {
         try {
             return Integer.parseInt(value);
         } catch (NumberFormatException e) {
-            logger.warn("参数: " + key + ",值: " + value + " 不是数字！将使用默认值：" + defaultValue);
+            logger.warn("key: " + key + ",value: " + value + " not numbers! Default values will be used：" + defaultValue);
             return defaultValue;
         }
     }
@@ -87,10 +87,10 @@ public final class TransportContext implements Serializable {
         if (parameters.containsKey(key)) {
             String oldValue = getParameter(key);
             if (value.equals(oldValue)) {
-                logger.warn("参数: " + key + "已经存在，值: " + oldValue);
+                logger.warn("key: " + key + " already exist，value: " + oldValue);
                 return this;
             } else {
-                logger.warn("参数: " + key + "已经存在，将使用新值: " + value + " 替换旧值：" + oldValue);
+                logger.warn("key: " + key + " already exist，new value will be used: " + value + " , old value：" + oldValue);
             }
         }
         Map<String, String> map = new HashMap<>(parameters);

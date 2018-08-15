@@ -27,14 +27,14 @@ public class DefaultServiceDiscoveryStrategy extends AbstractServiceDiscoveryStr
         do {
             if (!distributedServiceProviderIterator.hasNext()) {
                 int index = this.random.nextInt(distributedServiceProviders.size());
-                logger.info("当前主机不存在目标服务，因此准备执行远程服务：" + path + ", 可选择节点有 " + distributedServiceProviders.size() + " 个, 已随机选择第 " + (index + 1) + " 个");
+                logger.info("There is no target service for the current host, so it is ready to perform remote services：" + path + ", optional nodes: " + distributedServiceProviders.size() + " , random select " + (index + 1));
                 return distributedServiceProviders.get(index);
             }
 
             provider = distributedServiceProviderIterator.next();
         } while (!provider.getIp().equals(this.getZookeeperService().getAvailableLocalIp()));
 
-        logger.info("发现当前主机存在目标服务，已优先使用本主机服务");
+        logger.info("Host service is found to exist in the host computer");
         return provider;
     }
 }

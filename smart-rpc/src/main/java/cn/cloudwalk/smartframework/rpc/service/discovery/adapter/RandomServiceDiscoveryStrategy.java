@@ -23,7 +23,7 @@ public class RandomServiceDiscoveryStrategy extends AbstractServiceDiscoveryStra
     @Override
     public DistributedServiceProvider selectBestService(String path, List<DistributedServiceProvider> distributedServiceProviders) {
         int index = this.random.nextInt(distributedServiceProviders.size());
-        logger.info("准备执行远程服务：" + path + ", 可选择节点有 " + distributedServiceProviders.size() + " 个, 已随机选择第 " + (index + 1) + " 个");
+        logger.info("There is no target service for the current host, so it is ready to perform remote services：" + path + ", optional nodes: " + distributedServiceProviders.size() + " , random select " + (index + 1));
         return distributedServiceProviders.get(index);
     }
 }

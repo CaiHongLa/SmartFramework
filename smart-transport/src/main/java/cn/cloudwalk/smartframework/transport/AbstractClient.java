@@ -28,7 +28,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         try {
             doOpen();
         } catch (Throwable t) {
-            logger.error("打开连接异常", t);
+            logger.error("Open connection exception", t);
             close();
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(t));
         }
@@ -107,7 +107,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         }
         Channel channel = getChannel();
         if (channel == null || !channel.isConnected()) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("连接已经关闭，不能发送消息"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("The connection has been closed and no message can be sent."));
         }
         channel.send(message, sent);
     }
@@ -120,11 +120,11 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
             }
             doConnect();
             if (!isConnected()) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("与服务器建立连接失败"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("Failure to establish connection with server"));
             }
         } catch (Throwable e) {
-            logger.error("与服务器建立连接异常，" + TextUtil.getStackTrace(e));
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("与服务器建立连接异常", e));
+            logger.error("Establish connection exception with server" + TextUtil.getStackTrace(e));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("Establish connection exception with serve", e));
         } finally {
             connectLock.unlock();
         }

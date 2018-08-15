@@ -24,6 +24,6 @@ public class RpcHttpTransport implements Transport {
 
     @Override
     public Client connect(TransportContext transportContext, ChannelHandler handler) {
-        throw new UnsupportedOperationException("HttpClient不支持！");
+        throw new UnsupportedOperationException("HttpClient not support！");
     }
 }

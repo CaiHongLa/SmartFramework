@@ -12,6 +12,6 @@ public class InvalidProtocolParamsException extends InvalidProtocolException {
 
     @Override
     public String defShortName() {
-        return "无效的协议参数异常";
+        return "Invalid Protocol Params Exception";
     }
 }

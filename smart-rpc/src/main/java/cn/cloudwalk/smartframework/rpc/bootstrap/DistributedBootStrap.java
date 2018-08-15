@@ -54,17 +54,17 @@ public class DistributedBootStrap extends BaseComponent implements IBaseComponen
     private void connect() {
         Properties config = this.zookeeperService.getZookeeperConfig();
         if (this.zookeeperService.getRunningMode() == IZookeeperService.RUNNING_MODE.STANDALONE) {
-            logger.info("当前组件以 standalone 模式运行，因此无需连接 zookeeper 集群");
+            logger.info("The current component is running in standalone mode and will not connect to the zookeeper cluster.");
         } else {
-            logger.info("当前组件以 distributed 模式运行，即将开始连接 zookeeper 集群");
+            logger.info("The current component is running in distributed mode and is about to connect to the zookeeper cluster.");
             if (this.LOCAL_IP_LIST.contains((this.zookeeperService.getLocalIp() + "").trim().toLowerCase())) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("zookeeper 客户端拒绝以 " + this.LOCAL_IP_LIST + " 模式注册服务，请配置内网 IP"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("zookeeper client cannot with " + this.LOCAL_IP_LIST + " register server"));
             } else {
                 this.zookeeperService.connect(
                         config.getProperty("zookeeper.url"),
                         config.getProperty("zookeeper.sessionTimeout", "30000"),
                         config.getProperty("zookeeper.connectionTimeout", "30000"), state -> {
-                            logger.info("zookeeper 集群状态发生变更：" + state);
+                            logger.info("zookeeper connect state change：" + state);
                             if (state == IZookeeperWatcher.ConnectionState.CONNECTED || state == IZookeeperWatcher.ConnectionState.RECONNECTED) {
                                 zookeeperRegister.registerService();
                             }

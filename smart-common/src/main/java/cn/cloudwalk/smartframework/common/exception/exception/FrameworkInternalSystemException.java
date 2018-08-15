@@ -12,6 +12,6 @@ public class FrameworkInternalSystemException extends SystemException {
 
     @Override
     public String defShortName() {
-        return "框架内部异常";
+        return "Framework Exception";
     }
 }

@@ -12,16 +12,16 @@ public abstract class EmptyDomain extends BaseDomain {
 
     @Override
     public DomainDataHandler getDataHandler() {
-        throw new UnsupportedOperationException("不能操作 EmptyDomain");
+        throw new UnsupportedOperationException("EmptyDomain not support");
     }
 
     @Override
     public DomainMetadata getMetadata() {
-        throw new UnsupportedOperationException("不能操作 EmptyDomain");
+        throw new UnsupportedOperationException("EmptyDomain not support");
     }
 
     @Override
     public SqlBuilder getSqlBuilder() {
-        throw new UnsupportedOperationException("不能操作 EmptyDomain");
+        throw new UnsupportedOperationException("EmptyDomain not support");
     }
 }

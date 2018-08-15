@@ -37,14 +37,14 @@ public class HeaderExchangeClient implements ExchangeClient {
 
     public HeaderExchangeClient(Client client, boolean needHeartbeat) {
         if (client == null) {
-            throw new IllegalArgumentException("client不能为空！");
+            throw new IllegalArgumentException("client can not be null！");
         }
         this.client = client;
         this.channel = new HeaderExchangeChannel(client);
         this.heartbeat = client.getTransportContext().getParameter(ProtocolConstants.EXCHANGE_HEART_BEAT_TIME, 60000);
         this.heartbeatTimeout = client.getTransportContext().getParameter(ProtocolConstants.EXCHANGE_HEART_BEAT_TIMEOUT, 300000);
         if (heartbeatTimeout < heartbeat * 2) {
-            throw new IllegalStateException(ProtocolConstants.EXCHANGE_HEART_BEAT_TIMEOUT + "应该不小于" + ProtocolConstants.EXCHANGE_HEART_BEAT_TIME + "的两倍！");
+            throw new IllegalStateException(ProtocolConstants.EXCHANGE_HEART_BEAT_TIMEOUT + " should not be less than " + ProtocolConstants.EXCHANGE_HEART_BEAT_TIME + " two times！");
         }
         if (needHeartbeat) {
             startHeartbeatTimer();

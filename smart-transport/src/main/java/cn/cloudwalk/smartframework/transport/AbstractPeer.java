@@ -18,10 +18,10 @@ public abstract class AbstractPeer implements EndPoint, ChannelHandler {
 
     AbstractPeer(TransportContext transportContext, ChannelHandler handler) {
         if (transportContext == null) {
-            throw new IllegalArgumentException("transportContext不能为空！");
+            throw new IllegalArgumentException("transportContext can not be null！");
         }
         if (handler == null) {
-            throw new IllegalArgumentException("handler不能为空!");
+            throw new IllegalArgumentException("handler can not be null!");
         }
 
         this.transportContext = transportContext;
@@ -40,7 +40,7 @@ public abstract class AbstractPeer implements EndPoint, ChannelHandler {
 
     protected void setTransportContext(TransportContext transportContext) {
         if (transportContext == null) {
-            throw new IllegalArgumentException("transportContext不能为空！");
+            throw new IllegalArgumentException("transportContext can not be null！");
         }
         this.transportContext = transportContext;
     }

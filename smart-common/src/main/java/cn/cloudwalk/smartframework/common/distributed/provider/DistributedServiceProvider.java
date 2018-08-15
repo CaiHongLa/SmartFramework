@@ -1,11 +1,9 @@
 package cn.cloudwalk.smartframework.common.distributed.provider;
 
-import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
-import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
 import cn.cloudwalk.smartframework.common.model.BaseDataModel;
 import cn.cloudwalk.smartframework.common.util.JsonUtil;
 
-import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 
 /**
@@ -83,11 +81,7 @@ public abstract class DistributedServiceProvider extends BaseDataModel {
     }
 
     public byte[] toBytes() {
-        try {
-            return JsonUtil.object2Json(this).getBytes("UTF-8");
-        } catch (UnsupportedEncodingException e) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
-        }
+        return JsonUtil.object2Json(this).getBytes(StandardCharsets.UTF_8);
     }
 
     @Override

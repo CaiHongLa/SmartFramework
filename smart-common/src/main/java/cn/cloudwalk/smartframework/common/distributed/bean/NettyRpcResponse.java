@@ -1,4 +1,4 @@
-package cn.cloudwalk.smartframework.rpc.netty.bean;
+package cn.cloudwalk.smartframework.common.distributed.bean;
 
 import cn.cloudwalk.smartframework.common.model.BaseDataModel;
 

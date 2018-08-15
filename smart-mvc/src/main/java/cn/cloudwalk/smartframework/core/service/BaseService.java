@@ -74,6 +74,6 @@ public class BaseService<Entity extends BaseDomain, Pk extends Serializable> ext
 
     @Override
     public IBaseDao<Entity, Pk> getDefaultDao() {
-        throw new FrameworkInternalSystemException(new SystemExceptionDesc("如果 Controller 中要使用 BaseService 提供的预置服务，则必须在 Service 下实现 getDefaultDao() 方法来指定默认的 IDao 提供者"));
+        throw new FrameworkInternalSystemException(new SystemExceptionDesc("getDefaultDao() not override"));
     }
 }

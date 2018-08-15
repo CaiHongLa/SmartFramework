@@ -12,6 +12,6 @@ public class StandardProtocolException extends ProtocolException {
 
     @Override
     public String defShortName() {
-        return "标准协议异常";
+        return "Standard Protocol Exception";
     }
 }

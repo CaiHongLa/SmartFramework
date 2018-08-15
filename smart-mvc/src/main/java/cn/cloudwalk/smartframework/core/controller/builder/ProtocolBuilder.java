@@ -32,7 +32,7 @@ public class ProtocolBuilder {
 
     private void check(Object data) {
         if (data != null && !(data instanceof ProtocolOut) && !(data instanceof Map) && !(data instanceof List) && !(data instanceof Object[])) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("400000", "Protocol Data 类型仅能为 [ProtocolOut子类、Map、List、数组] 中的其中一种"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("400000", "Protocol Data can only be one of [ProtocolOut subclass、Map、List、Array]"));
         }
     }
 }

@@ -7,8 +7,6 @@ import cn.cloudwalk.smartframework.transport.ChannelHandlerDelegate;
 import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
-import com.lmax.disruptor.Sequence;
-import com.lmax.disruptor.SequenceReportingEventHandler;
 import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -111,7 +109,7 @@ public class ChannelDisruptorHandler implements ChannelHandlerDelegate {
             }
             Disruptor<ChannelEvent> temp = disruptor;
             if (temp == null) {
-                logger.error("Disruptor队列已经关闭，消息不再接收");
+                logger.error("The Disruptor queue has been closed, and the message is no longer received.");
             } else if (temp.getRingBuffer().remainingCapacity() == 0L) {
                 this.handler.received(channel, message);
             } else {
@@ -119,7 +117,7 @@ public class ChannelDisruptorHandler implements ChannelHandlerDelegate {
                 try {
                     disruptor.publishEvent(info.eventTranslator);
                 } catch (NullPointerException e) {
-                    logger.error("Disruptor队列已经关闭，消息不再接收");
+                    logger.error("The Disruptor queue has been closed, and the message is no longer received.");
                 }
             }
         } else {

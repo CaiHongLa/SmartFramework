@@ -30,7 +30,7 @@ public class TextUtil {
         } else if (returnType == Double.class) {
             return (T) Double.valueOf(rs);
         } else {
-            throw new RuntimeException("不支持的返回类型");
+            throw new RuntimeException("not support returnType");
         }
     }
 

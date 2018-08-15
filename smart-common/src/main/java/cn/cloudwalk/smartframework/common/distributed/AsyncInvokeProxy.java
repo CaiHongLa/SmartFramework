@@ -1,6 +1,6 @@
-package cn.cloudwalk.smartframework.rpc.invoke;
+package cn.cloudwalk.smartframework.common.distributed;
 
-import cn.cloudwalk.smartframework.rpc.invoke.future.NettyRpcResponseFuture;
+import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFuture;
 
 /**
  * Rpc异步调用

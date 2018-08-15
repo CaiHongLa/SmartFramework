@@ -21,10 +21,10 @@ public class ResourceDestroy extends BaseComponent implements ApplicationListene
     @Override
     public void onApplicationEvent(ContextClosedEvent event) {
         if(event.getApplicationContext().getParent() == null) {
-            logger.info("开始关闭Http连接池！");
+            logger.info("Start closing the Http connection pool！");
             HttpUtil.Async.closeAsyncHttpClient();
             HttpUtil.Sync.closeHttpClient();
-            logger.info("Http连接池关闭完成！");
+            logger.info("Http connection pool closed！");
         }
     }
 }

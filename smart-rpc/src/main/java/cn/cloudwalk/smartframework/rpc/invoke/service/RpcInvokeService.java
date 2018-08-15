@@ -1,14 +1,14 @@
 package cn.cloudwalk.smartframework.rpc.invoke.service;
 
 import cn.cloudwalk.smartframework.common.BaseComponent;
+import cn.cloudwalk.smartframework.common.distributed.AsyncInvokeProxy;
+import cn.cloudwalk.smartframework.common.distributed.IRpcInvokeService;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
 import cn.cloudwalk.smartframework.common.distributed.provider.DistributedServiceProvider;
 import cn.cloudwalk.smartframework.common.distributed.provider.RpcServiceProvider;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
-import cn.cloudwalk.smartframework.rpc.invoke.AsyncInvokeProxy;
-import cn.cloudwalk.smartframework.rpc.invoke.IRpcInvokeService;
-import cn.cloudwalk.smartframework.rpc.invoke.InvokeProxy;
+import cn.cloudwalk.smartframework.rpc.invoke.proxy.InvokeProxy;
 import org.apache.commons.collections4.list.UnmodifiableList;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
@@ -51,32 +51,28 @@ public class RpcInvokeService extends BaseComponent implements IRpcInvokeService
                         new InvokeProxy<>(node.getIp(), node.getPort(), interfaceClass, returnType)
                 );
             } else {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC调用方式获取节点错误！"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC invoke node error！"));
             }
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE模式下不能启用RPC调用！"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE not support rpc！"));
         }
     }
 
-    @Override
-    public <F> AsyncInvokeProxy asyncCall(Class<F> interfaceClass, String zookeeperId) {
-        return asyncCall(interfaceClass, zookeeperId, null);
-    }
 
     @Override
-    public <F> AsyncInvokeProxy asyncCall(Class<F> interfaceClass, String zookeeperId, Class<?> returnType) {
+    public <F> AsyncInvokeProxy asyncCall(Class<F> interfaceClass, String zookeeperId) {
         IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
         if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
             String className = interfaceClass.getName().replace(".", "/");
             String zookeeperPath = zookeeperService.getRpcServicePath() + "/" + zookeeperId + "/" + className;
             DistributedServiceProvider node = this.zookeeperService.getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.RPC);
             if (node instanceof RpcServiceProvider) {
-                return new InvokeProxy<>(node.getIp(), node.getPort(), interfaceClass, returnType);
+                return new InvokeProxy<>(node.getIp(), node.getPort(), interfaceClass, null);
             } else {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC调用方式获取节点错误！"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC invoke node error！"));
             }
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE模式下不能启用RPC调用！"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE not support rpc！"));
         }
     }
 
@@ -102,26 +98,21 @@ public class RpcInvokeService extends BaseComponent implements IRpcInvokeService
                                 new Class<?>[]{interfaceClass},
                                 new InvokeProxy<>(node.getIp(), node.getPort(), interfaceClass, returnType)));
                     } else {
-                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC调用方式获取节点错误！"));
+                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC invoke node error！"));
                     }
                 }
                 return new UnmodifiableList<>(invokeProxyList);
             } else {
-                logger.error(zookeeperPath + " 无可用服务提供者，请确定该服务是否还有在运行的提供者实例，或者该服务地址是否正确");
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc(zookeeperPath + " 无可用服务提供者，请确定该服务是否还有在运行的提供者实例，或者该服务地址是否正确"));
+                logger.error(zookeeperPath + " no available service provider, make sure that the service still has a running provider instance, or that the service address is correct");
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc(zookeeperPath + " no available service provider, make sure that the service still has a running provider instance, or that the service address is correct"));
             }
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE模式下不能启用RPC调用！"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE not support rpc！"));
         }
     }
 
     @Override
     public <F> List<AsyncInvokeProxy> asyncBroadcast(Class<F> interfaceClass, String zookeeperId) {
-        return asyncBroadcast(interfaceClass, zookeeperId, null);
-    }
-
-    @Override
-    public <F> List<AsyncInvokeProxy> asyncBroadcast(Class<F> interfaceClass, String zookeeperId, Class<?> returnType) {
         List<AsyncInvokeProxy> asyncInvokeProxyList = new ArrayList<>();
         IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
         if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
@@ -131,18 +122,18 @@ public class RpcInvokeService extends BaseComponent implements IRpcInvokeService
             if (nodes != null && !nodes.isEmpty()) {
                 for (DistributedServiceProvider node : nodes) {
                     if (node instanceof RpcServiceProvider) {
-                        asyncInvokeProxyList.add(new InvokeProxy<>(node.getIp(), node.getPort(), interfaceClass, returnType));
+                        asyncInvokeProxyList.add(new InvokeProxy<>(node.getIp(), node.getPort(), interfaceClass, null));
                     } else {
-                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC调用方式获取节点错误！"));
+                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC invoke node error！"));
                     }
                 }
                 return new UnmodifiableList<>(asyncInvokeProxyList);
             } else {
-                logger.error(zookeeperPath + " 无可用服务提供者，请确定该服务是否还有在运行的提供者实例，或者该服务地址是否正确");
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc(zookeeperPath + " 无可用服务提供者，请确定该服务是否还有在运行的提供者实例，或者该服务地址是否正确"));
+                logger.error(zookeeperPath + " no available service provider, make sure that the service still has a running provider instance, or that the service address is correct");
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc(zookeeperPath + " no available service provider, make sure that the service still has a running provider instance, or that the service address is correct"));
             }
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE模式下不能启用RPC调用！"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE not support rpc！"));
         }
     }
 }

@@ -177,7 +177,7 @@ public class HttpUtil {
                     try {
                         response.close();
                     } catch (IOException e) {
-                        logger.error("关闭Http流异常！" + e);
+                        logger.error("close http stream error！" + e);
                     }
                 }
             }
@@ -253,11 +253,11 @@ public class HttpUtil {
             ResponseHandler<T> handler = response -> {
                 HttpEntity entity = response.getEntity();
                 if (entity == null) {
-                    throw new ErrorHttpStatusException(new SystemExceptionDesc("响应内容为空"));
+                    throw new ErrorHttpStatusException(new SystemExceptionDesc("response is null"));
                 } else {
                     HttpStatus statusCode = HttpStatus.valueOf(response.getStatusLine().getStatusCode());
                     if (!statusCode.is2xxSuccessful() && !statusCode.is3xxRedirection()) {
-                        throw new ErrorHttpStatusException(new SystemExceptionDesc("错误的 HTTP 状态（statusLine=" + response.getStatusLine() + ", url=" + url + "）"));
+                        throw new ErrorHttpStatusException(new SystemExceptionDesc("error HTTP status（statusLine=" + response.getStatusLine() + ", url=" + url + "）"));
                     } else {
                         ContentType contentType = ContentType.getOrDefault(entity);
                         Charset charset = contentType.getCharset();
@@ -368,7 +368,7 @@ public class HttpUtil {
                             String responseText = HttpBaseSupportUtil.getResponseText(response);
                             metadata.setResponse(responseText);
                             if (!statusCode.is2xxSuccessful() && !statusCode.is3xxRedirection()) {
-                                ErrorHttpStatusException exception = new ErrorHttpStatusException(new SystemExceptionDesc("错误的 http status 状态（statusCode=" + statusCode + ", url=" + metadata.getUrl() + "）"));
+                                ErrorHttpStatusException exception = new ErrorHttpStatusException(new SystemExceptionDesc("error http status （statusCode=" + statusCode + ", url=" + metadata.getUrl() + "）"));
                                 callback.onError(exception, metadata);
                                 executeResult.addError(metadata.getCode(), new HttpErrorDetail(metadata, exception));
                             } else {
@@ -376,7 +376,7 @@ public class HttpUtil {
                                 executeResult.addResult(metadata.getCode(), new cn.cloudwalk.smartframework.common.util.http.bean.HttpResponse(responseText, response.getStatusLine(), metadata));
                             }
                         } catch (Exception e) {
-                            logger.error("捕获到 http client 回调函数异常 " + e);
+                            logger.error("cached http client callback error " + e);
                         } finally {
                             countDownLatch.countDown();
                         }
@@ -391,7 +391,7 @@ public class HttpUtil {
                             callback.onError(ex, metadata);
                             executeResult.addError(metadata.getCode(), new HttpErrorDetail(metadata, ex));
                         } catch (Exception e) {
-                            logger.error("捕获到 http client 回调函数异常 " + e);
+                            logger.error("cached http client callback error " + e);
                         } finally {
                             countDownLatch.countDown();
                         }
@@ -405,7 +405,7 @@ public class HttpUtil {
                             callback.onProgressChange(total - countDownLatch.getCount() - 1L, (long) total);
                             callback.onCancel(metadata);
                         } catch (Exception e) {
-                            logger.error("捕获到 http client 回调函数异常 " + e);
+                            logger.error("cached http client callback error " + e);
                         } finally {
                             countDownLatch.countDown();
                         }

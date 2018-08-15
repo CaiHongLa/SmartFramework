@@ -20,6 +20,7 @@ import org.springframework.web.servlet.ModelAndView;
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.Properties;
 
 /**
@@ -35,7 +36,7 @@ public class ExceptionHandler extends BaseComponent implements HandlerExceptionR
         Properties config = getConfigurationService().getApplicationCfg();
         this.httpStatus = Integer.valueOf(config.getProperty("system.exceptionHttpStatus", "500"));
         if (this.httpStatus == 200) {
-            logger.info("请注意：配置了 system.exceptionHttpStatus=200，因此所有的异常发生时，http status 均为 200");
+            logger.info("WARN：config with system.exceptionHttpStatus=200，so while exception happens，http status is 200");
         }
 
         String className = config.getProperty("system.exceptionWrapper", "cn.cloudwalk.smartframework.common.exception.wrapper.DefaultExceptionWrapper");
@@ -48,9 +49,9 @@ public class ExceptionHandler extends BaseComponent implements HandlerExceptionR
         }
 
         if (config.containsKey("system.exceptionWrapper")) {
-            logger.info("检测到 system.exceptionWrapper 包装器配置，已自动启用 " + config.getProperty("system.exceptionWrapper") + " 包装器");
+            logger.info("config with system.exceptionWrapper，init " + config.getProperty("system.exceptionWrapper") + " wrapper");
         } else {
-            logger.info("没有检测到 system.exceptionWrapper 包装器配置，已自动启用默认包装器 cn.cloudwalk.smartframework.common.exception.wrapper.DefaultExceptionWrapper");
+            logger.info("config without system.exceptionWrapper ，init default cn.cloudwalk.smartframework.common.exception.wrapper.DefaultExceptionWrapper");
         }
 
     }
@@ -96,7 +97,7 @@ public class ExceptionHandler extends BaseComponent implements HandlerExceptionR
 
         try {
             response.setContentType("text/json");
-            response.getOutputStream().write(this.exceptionWrapper.getWrappedResultAsJson(targetDesc).getBytes("UTF-8"));
+            response.getOutputStream().write(this.exceptionWrapper.getWrappedResultAsJson(targetDesc).getBytes(StandardCharsets.UTF_8));
         } catch (Exception ee) {
             logger.error(ee);
         }

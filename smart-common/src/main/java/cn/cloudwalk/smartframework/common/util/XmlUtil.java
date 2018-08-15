@@ -63,14 +63,14 @@ public class XmlUtil {
 
             return xmlStringBuilder.toString();
         } catch (IOException e) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("文件读取异常：" + e));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("read file error：" + e));
         } finally {
             try {
                 if (xmlFileReader != null) {
                     xmlFileReader.close();
                 }
             } catch (IOException e) {
-                logger.error("文件关闭异常：" + e);
+                logger.error("close file error：" + e);
             }
 
         }

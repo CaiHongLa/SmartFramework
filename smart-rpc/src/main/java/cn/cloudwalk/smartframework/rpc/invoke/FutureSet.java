@@ -1,4 +1,6 @@
-package cn.cloudwalk.smartframework.rpc.invoke.future;
+package cn.cloudwalk.smartframework.rpc.invoke;
+
+import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFuture;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -12,8 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see NettyRpcResponseFuture
  * @since 1.0.0
  */
-public class FutureSet {
+class FutureSet {
 
-    public static Map<String, NettyRpcResponseFuture> futureMap = new ConcurrentHashMap<>();
+    static Map<String, NettyRpcResponseFuture> futureMap = new ConcurrentHashMap<>();
 
 }

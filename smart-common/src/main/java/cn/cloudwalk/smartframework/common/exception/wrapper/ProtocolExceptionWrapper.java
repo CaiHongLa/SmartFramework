@@ -28,9 +28,9 @@ public class ProtocolExceptionWrapper extends ExceptionWrapperAdapter {
     private Map<String, Object> build(ExceptionType type, Map<String, Object> serializedData) {
         if (this.DEFAULT_ERROR_CODE == null && this.getConfigProperties().containsKey(DEFAULT_ERROR_CODE_CONFIG_FIELD_NAME)) {
             this.DEFAULT_ERROR_CODE = this.getConfigProperties().getProperty(DEFAULT_ERROR_CODE_CONFIG_FIELD_NAME);
-            this.logger.info("已设置 ProtocolExceptionWrapper 的默认错误编码为 " + this.DEFAULT_ERROR_CODE);
+            this.logger.info("init ProtocolExceptionWrapper default error code " + this.DEFAULT_ERROR_CODE);
         } else {
-            this.logger.warn("设置了 ProtocolExceptionWrapper 异常包装器，但没有指定默认错误编码，缺少 system.exceptionWrapper.defaultErrorCode 配置");
+            this.logger.warn("config with ProtocolExceptionWrapper ，but not config error code，lose system.exceptionWrapper.defaultErrorCode ");
         }
 
         Map<String, Object> data = new HashMap<>();

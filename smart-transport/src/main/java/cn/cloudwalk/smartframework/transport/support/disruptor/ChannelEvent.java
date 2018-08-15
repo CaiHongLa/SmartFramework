@@ -61,7 +61,7 @@ public class ChannelEvent {
 
     public void executeException(Throwable ex, long sequence, ChannelEvent event){
         if (ex instanceof TransportException) {
-            logger.info("连接发生传输异常：" + ex + ",即将关闭！");
+            logger.info("Connection occurred transmission exception：" + ex + ",Close to close！");
              channel.close();
         }
     }

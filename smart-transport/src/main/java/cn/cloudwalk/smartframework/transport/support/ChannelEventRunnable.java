@@ -47,42 +47,42 @@ public class ChannelEventRunnable implements Runnable {
                 try {
                     handler.connected(channel);
                 } catch (Exception e) {
-                    logger.warn("ChannelEventRunnable处理" + state + "异常, 连接：" + channel, e);
+                    logger.warn("ChannelEventRunnable handle " + state + " error, channel：" + channel, e);
                 }
                 break;
             case DISCONNECTED:
                 try {
                     handler.disconnected(channel);
                 } catch (Exception e) {
-                    logger.warn("ChannelEventRunnable处理" + state + "异常, 连接：" + channel, e);
+                    logger.warn("ChannelEventRunnable handle " + state + " error, channel：" + channel, e);
                 }
                 break;
             case SENT:
                 try {
                     handler.send(channel, message);
                 } catch (Exception e) {
-                    logger.warn("ChannelEventRunnable处理 " + state + "异常, 连接：" + channel
-                            + ", 消息：" + message, e);
+                    logger.warn("ChannelEventRunnable handle " + state + " error, channel：" + channel
+                            + ", message：" + message, e);
                 }
                 break;
             case RECEIVED:
                 try {
                     handler.received(channel, message);
                 } catch (Exception e) {
-                    logger.warn("ChannelEventRunnable处理 " + state + "异常, 连接：" + channel
-                            + ", 消息：" + message, e);
+                    logger.warn("ChannelEventRunnable handle " + state + " error，channel：" + channel
+                            + ", message：" + message, e);
                 }
                 break;
             case CAUGHT:
                 try {
                     handler.caught(channel, exception);
                 } catch (Exception e) {
-                    logger.warn("ChannelEventRunnable处理 " + state + "异常, 连接：" + channel
-                            + ", 消息：" + message + ",异常：" + e.getMessage(), e);
+                    logger.warn("ChannelEventRunnable handle " + state + " error, channel：" + channel
+                            + ", message：" + message + ", error：" + e.getMessage(), e);
                 }
                 break;
             default:
-                logger.warn("未知状态: " + state + ", 消息：" + message);
+                logger.warn("unknown state: " + state + ", message：" + message);
         }
     }
 

@@ -116,7 +116,7 @@ public class DateUtil {
                 }
             }
 
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("日期为空或是不支持的样本格式：" + date));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("date is null or not support format：" + date));
         }
 
         @Override

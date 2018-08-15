@@ -20,7 +20,7 @@ public abstract class BackgroundTask<V> implements IBackgroundTask<V> {
         try {
             return this.execute();
         } catch (Exception e) {
-            this.logger.error("后台任务执行时捕获到异常", e);
+            this.logger.error("cached exception while background task running", e);
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
         }
     }

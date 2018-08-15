@@ -50,7 +50,7 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
                 executor.shutdown();
             }
         } catch (Throwable t) {
-            logger.warn("关闭线程池失败: " + t.getMessage(), t);
+            logger.warn("Failed to close thread pool: " + t.getMessage(), t);
         }
     }
 

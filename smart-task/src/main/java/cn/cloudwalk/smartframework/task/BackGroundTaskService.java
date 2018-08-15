@@ -35,14 +35,14 @@ public class BackGroundTaskService implements IBackGroundTaskService {
     @PostConstruct
     private void init() {
         if(null == configurationService){
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService服务不可用，请导入Config组件！"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService is null，please import Config module in your application context ！"));
         }
         Properties config = configurationService.getApplicationCfg();
         int value = 1000;
         if (config != null) {
             value = Integer.parseInt(config.getProperty("thread.task.pool", "1000"));
         }
-        logger.info("thread.task.pool 的值为 " + value + "（如果没有设置，则默认值为 1000）");
+        logger.info("thread.task.pool value  " + value + "（If not set, the default value is 1000.）");
         executorService = new ThreadPoolExecutor(0, value,
                 0L, TimeUnit.MILLISECONDS,
                 new SynchronousQueue<>(), new ThreadFactoryBuilder()
@@ -62,9 +62,9 @@ public class BackGroundTaskService implements IBackGroundTaskService {
     @PreDestroy
     private void destroy() {
         if (this.executorService != null) {
-            logger.info("开始关闭后台任务线程池");
+            logger.info("Start closing the background task thread pool.");
             this.executorService.shutdownNow();
-            logger.info("后台任务线程池关闭成功");
+            logger.info("Background task thread pool closed successfully");
         }
     }
 }

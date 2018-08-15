@@ -1,7 +1,6 @@
-package cn.cloudwalk.smartframework.rpc.invoke.future;
+package cn.cloudwalk.smartframework.common.distributed.bean;
 
-import cn.cloudwalk.smartframework.rpc.invoke.AsyncCallBack;
-import cn.cloudwalk.smartframework.rpc.netty.bean.NettyRpcResponse;
+import cn.cloudwalk.smartframework.common.distributed.AsyncCallBack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -97,9 +96,9 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
                 return null;
             }
         } else {
-            throw new RuntimeException("RPC调用超时 " + requestId
-                    + ". 类: " + className
-                    + ". 方法: " + methodName);
+            throw new RuntimeException("RPC timeout " + requestId
+                    + ". Class: " + className
+                    + ". Method: " + methodName);
         }
     }
 
@@ -125,7 +124,7 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
         long responseTime = System.currentTimeMillis() - startTime;
         long responseTimeThreshold = 5000;
         if (responseTime > responseTimeThreshold) {
-            logger.warn("RPC调用耗时过长 " + response.getRequestId() + ". 耗时： " + responseTime + "ms");
+            logger.warn("RPC takes long time " + response.getRequestId() + ". take： " + responseTime + "ms");
         }
     }
 

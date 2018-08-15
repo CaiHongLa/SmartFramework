@@ -1,12 +1,11 @@
 package cn.cloudwalk.smartframework.rpc.netty.http;
 
+import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcRequest;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
-import cn.cloudwalk.smartframework.common.exception.exception.StandardBusinessException;
 import cn.cloudwalk.smartframework.common.util.JsonUtil;
 import cn.cloudwalk.smartframework.common.util.TextUtil;
 import cn.cloudwalk.smartframework.config.SpringContextHolder;
-import cn.cloudwalk.smartframework.rpc.netty.bean.NettyRpcRequest;
 import cn.cloudwalk.smartframework.rpc.netty.codec.SerializationUtil;
 import cn.cloudwalk.smartframework.transport.Channel;
 import cn.cloudwalk.smartframework.transport.exchange.support.ExchangeHandlerAdapter;
@@ -81,7 +80,7 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
                 final String requestId = (String) params.get("requestId");
                 final String methodName = (String) params.get("methodName");
                 final boolean oneWay = Boolean.valueOf((String) params.get("oneWay"));
-                logger.info("接收到请求，类：" + className + "，方法：" + methodName + "，序号：" + requestId + "，单向：" + oneWay);
+                logger.info("received request，class：" + className + "，method：" + methodName + "，id：" + requestId + "，one way：" + oneWay);
                 Map<String, Object> resultMap = new HashMap<>();
                 resultMap.put("requestId", requestId);
 
@@ -94,19 +93,19 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
                 try {
                     nettyRpcRequest = this.getRequestParams(request);
                 } catch (Exception e) {
-                    String errorMessage = "处理Rpc请求参数异常";
+                    String errorMessage = "Handling Rpc request parameter exception";
                     logger.error(errorMessage, e);
                     resultMap.put("error", new FrameworkInternalSystemException(new SystemExceptionDesc(e, errorMessage)));
                     writeResponse(JsonUtil.object2Json(resultMap), channel);
                     return;
                 }
-                logger.info("请求参数：" + nettyRpcRequest);
+                logger.info("request params：" + nettyRpcRequest);
                 try {
                     Object result = handle(className, methodName, nettyRpcRequest);
                     resultMap.put("result", result);
                 } catch (Exception e) {
                     //对于反射到bean的异常 认为是业务处理异常 需要将异常写回到调用方后再将异常在提供方抛出
-                    logger.error("处理Rpc请求异常！", e);
+                    logger.error("Handling Rpc request exceptions！", e);
                     if(e instanceof FrameworkInternalSystemException) {
                         resultMap.put("error", e);
                     } else {
@@ -125,7 +124,7 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
                     writeResponse(JsonUtil.object2Json(resultMap), channel);
                 }
             } else {
-                logger.error("不能处理的请求: " + message);
+                logger.error("Unable to process request: " + message);
             }
         } finally {
             ReferenceCountUtil.release(message);
@@ -141,7 +140,7 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
     private Object handle(String className, String methodName, NettyRpcRequest request) {
         Object serviceBean = handlers.get(className);
         if (null == serviceBean) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(className + "服务无可用实现类提供者，可能原因为该接口没有实现类 或 实现类未注解为 PublicRpcService"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(className + " does not have an available implementation class provider, possibly because the interface does not implement a class or the implementation class is not annotated as PublicRpcService"));
         }
         Class<?> serviceClass = serviceBean.getClass();
         //使用Spring代理的bean触发Aop响应
@@ -149,7 +148,7 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
         Class<?>[] parameterTypes = request.getParameterTypes();
         Method method = ReflectionUtils.findMethod(serviceClass, methodName, parameterTypes);
         if(null == method){
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(className + "服务无可用方法，请检查方法名称是否正确"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(className + " is not available. Please check if the name of the method is correct."));
         }
         return ReflectionUtils.invokeMethod(method, targetBean, request.getParameters());
     }
@@ -183,7 +182,7 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
     }
 
     private void writeResponse(String data, Channel channel) throws TransportException {
-        logger.info("请求响应结果: " + data);
+        logger.info("response: " + data);
         ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.directBuffer();
         byteBuf.writeBytes(data.getBytes(CharsetUtil.UTF_8));
         FullHttpResponse response = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, byteBuf);

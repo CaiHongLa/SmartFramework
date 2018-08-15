@@ -28,7 +28,7 @@ public class DefaultChannelHandler extends WrappedChannelHandler {
         try {
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelEventRunnable.ChannelState.CONNECTED));
         } catch (Throwable t) {
-            throw new TransportException(channel, getClass() + "处理连接建立时异常", t);
+            throw new TransportException(channel, getClass() + " handling connection setup exception", t);
         }
     }
 
@@ -38,7 +38,7 @@ public class DefaultChannelHandler extends WrappedChannelHandler {
         try {
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelEventRunnable.ChannelState.DISCONNECTED));
         } catch (Throwable t) {
-            throw new TransportException(channel, getClass() + "处理连接断开时异常", t);
+            throw new TransportException(channel, getClass() + " handling exceptions during connection disconnection", t);
         }
     }
 
@@ -51,7 +51,7 @@ public class DefaultChannelHandler extends WrappedChannelHandler {
             if (t instanceof RejectedExecutionException) {
                 return;
             }
-            throw new TransportException(channel, getClass() + "处理消息时异常", t);
+            throw new TransportException(channel, getClass() + " exception handling message", t);
         }
     }
 
@@ -61,7 +61,7 @@ public class DefaultChannelHandler extends WrappedChannelHandler {
         try {
             executor.execute(new ChannelEventRunnable(channel, handler, ChannelEventRunnable.ChannelState.CAUGHT, exception));
         } catch (Throwable t) {
-            throw new TransportException(channel, getClass() + "处理异常时异常", t);
+            throw new TransportException(channel, getClass() + " exception handling exception", t);
         }
     }
 

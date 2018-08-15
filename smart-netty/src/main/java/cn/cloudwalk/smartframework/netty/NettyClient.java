@@ -83,7 +83,7 @@ public class NettyClient extends AbstractClient {
                     if (oldChannel != null) {
                         try {
                             if (logger.isInfoEnabled()) {
-                                logger.info("关闭旧连接：" + oldChannel + "，创建新连接：" + newChannel);
+                                logger.info("close old channel：" + oldChannel + "，create new channel：" + newChannel);
                             }
                             oldChannel.close();
                         } finally {
@@ -93,7 +93,7 @@ public class NettyClient extends AbstractClient {
                 } finally {
                     if (NettyClient.this.isClosed()) {
                         try {
-                            logger.warn("关闭新的连接： " + newChannel + ", 因为客户端已经关闭！");
+                            logger.warn("close new channel： " + newChannel + ", because client is closed！");
                             newChannel.close();
                         } finally {
                             NettyClient.this.channel = null;

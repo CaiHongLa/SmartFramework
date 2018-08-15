@@ -13,6 +13,6 @@ public abstract class JdbcException extends SystemException {
 
     @Override
     public String defShortName() {
-        return "jdbc 异常";
+        return "JDBC Exception";
     }
 }

@@ -12,6 +12,6 @@ public abstract class HttpException extends SystemException {
 
     @Override
     public String defShortName() {
-        return "http 异常";
+        return "Http Exception";
     }
 }

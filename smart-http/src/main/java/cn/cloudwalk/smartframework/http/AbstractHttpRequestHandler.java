@@ -93,15 +93,15 @@ public abstract class AbstractHttpRequestHandler extends ExchangeHandlerAdapter 
 
                 //不带地址的请求过滤掉
                 if (EMPTY_URL.equals(uri)) {
-                    this.writeError("400000", "无效的请求地址, 请确定是否为合法的服务路径", channel);
+                    this.writeError("400000", "Invalid request address, please confirm if it is a valid service path", channel);
                     return;
                 }
-                logger.info("接收到请求: url=" + uri + ", method=" + method + ", transferType=" + transferType);
+                logger.info("received request: url=" + uri + ", method=" + method + ", transferType=" + transferType);
                 Map<String, Object> params = this.getRequestParams(transferType, request);
                 if (uri.contains(URL_PARAMETER_SPLIT)) {
                     uri = uri.substring(0, uri.indexOf("?"));
                 }
-                logger.info("请求参数: " + params);
+                logger.info("request params: " + params);
                 Map<String, File> files = (Map<String, File>) params.remove(FILE_UPLOAD_PARAM);
                 if (files == null || files.isEmpty()) {
                     this.handle(uri, params, transferType, channel);
@@ -109,7 +109,7 @@ public abstract class AbstractHttpRequestHandler extends ExchangeHandlerAdapter 
                     this.handle(uri, files, params, channel);
                 }
             } else {
-                logger.error("不能处理的请求: " + message);
+                logger.error("Unable to process request: " + message);
             }
         }finally {
             ReferenceCountUtil.release(message);
@@ -118,7 +118,7 @@ public abstract class AbstractHttpRequestHandler extends ExchangeHandlerAdapter 
 
     @Override
     public void caught(Channel channel, Throwable exception) throws TransportException {
-        String message = "系统异常";
+        String message = "System Error";
         if (exception instanceof BaseException) {
             message = ((BaseException) exception).getDesc().getRespDesc();
         }
@@ -208,7 +208,7 @@ public abstract class AbstractHttpRequestHandler extends ExchangeHandlerAdapter 
                     params.put(FILE_UPLOAD_PARAM, files);
                 }
             } catch (Exception exception) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("处理请求参数时出现错误", exception));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("An error occurred while processing the request parameters", exception));
             }
         }
         return params;
@@ -243,13 +243,13 @@ public abstract class AbstractHttpRequestHandler extends ExchangeHandlerAdapter 
     }
 
     protected void writeError(Exception e, Channel channel) throws TransportException {
-        this.writeError("400000", "系统异常", channel);
+        this.writeError("400000", "System Error", channel);
     }
 
     protected void writeResponse(String data, Channel channel) throws TransportException {
-        logger.info("请求响应结果: " + data);
+        logger.info("Request response result: " + data);
         if (data == null) {
-            this.writeError("400000", "请求响应结果为空", channel);
+            this.writeError("400000", "request response result is empty", channel);
         } else {
             String contentType;
             if (!data.startsWith("<")) {

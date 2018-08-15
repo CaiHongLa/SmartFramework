@@ -48,6 +48,7 @@ import org.springframework.web.util.UriUtils;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
@@ -66,11 +67,11 @@ public class HttpBaseSupportUtil {
     static {
         Properties config = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir("application.properties");
         if (config != null) {
-            logger.info("加载到配置文件 application.properties，其内容为 " + config);
+            logger.info("loaded application.properties，" + config);
             params = PropertiesUtil.filter("system.http.params.", true, config);
-            logger.info("过滤后的配置参数为 " + params);
+            logger.info("after filter , " + params);
         } else {
-            logger.info("没有加载到配置文件 application.properties，将使用默认参数进行配置");
+            logger.info("can not load application.properties，will run with default config");
         }
 
     }
@@ -79,7 +80,7 @@ public class HttpBaseSupportUtil {
     }
 
     private static PoolingNHttpClientConnectionManager createAsyncConnectionManager(String certName) {
-        logger.info("开始初始化 PoolingNHttpClientConnectionManager");
+        logger.info("init PoolingNHttpClientConnectionManager");
         IOReactorConfig ioReactorConfig = IOReactorConfig.custom().setIoThreadCount(getIntParam("ioThreadCount", Runtime.getRuntime().availableProcessors() * 40)).setConnectTimeout(getIntParam("connectTimeout", 30000)).setSoTimeout(getIntParam("soTimeout", 180000)).setTcpNoDelay(true).setBacklogSize(getIntParam("backlogSize", 512)).build();
 
         try {
@@ -93,7 +94,7 @@ public class HttpBaseSupportUtil {
             PoolingNHttpClientConnectionManager asyncConnManager = new PoolingNHttpClientConnectionManager(ioReactor, sslioSessionRegistry);
             asyncConnManager.setMaxTotal(getIntParam("maxTotal", 5000));
             asyncConnManager.setDefaultMaxPerRoute(getIntParam("defaultMaxPerRoute", 1000));
-            logger.info("初始化 PoolingNHttpClientConnectionManager 完成");
+            logger.info("PoolingNHttpClientConnectionManager init completed");
             return asyncConnManager;
         } catch (Exception e) {
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
@@ -101,7 +102,7 @@ public class HttpBaseSupportUtil {
     }
 
     private static PoolingHttpClientConnectionManager createConnectionManager(String certName) {
-        logger.info("开始初始化 PoolingHttpClientConnectionManager");
+        logger.info("init PoolingHttpClientConnectionManager");
         RegistryBuilder<ConnectionSocketFactory> builder = RegistryBuilder.<ConnectionSocketFactory>create().register("http", new PlainConnectionSocketFactory());
         if (SSLConfigUtil.isConfiguredHttps()) {
             builder.register("https", new SSLConnectionSocketFactory(SSLConfigUtil.getSSLContext(certName), SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER));
@@ -111,7 +112,7 @@ public class HttpBaseSupportUtil {
         PoolingHttpClientConnectionManager connManager = new PoolingHttpClientConnectionManager(socketFactoryRegistry);
         connManager.setMaxTotal(getIntParam("maxTotal", 5000));
         connManager.setDefaultMaxPerRoute(getIntParam("defaultMaxPerRoute", 1000));
-        logger.info("初始化 PoolingHttpClientConnectionManager 完成");
+        logger.info("PoolingHttpClientConnectionManager init completed");
         return connManager;
     }
 
@@ -133,7 +134,7 @@ public class HttpBaseSupportUtil {
                 return hcnode.getClient();
             }
 
-            logger.error("发现 CloseableHttpAsyncClient 被异常关闭，准备重新初始化");
+            logger.error("CloseableHttpAsyncClient closed，ready to init again");
             HttpAsyncClientNode client = asyncClients.remove(cacheKey);
 
             try {
@@ -142,7 +143,7 @@ public class HttpBaseSupportUtil {
             }
         }
 
-        logger.info("开始初始化 CloseableHttpAsyncClient");
+        logger.info("init CloseableHttpAsyncClient");
         ConnectionConfig connConfig = ConnectionConfig.custom().setBufferSize(131072).build();
         PoolingNHttpClientConnectionManager connManager = createAsyncConnectionManager(certName);
         HttpAsyncClientBuilder httpClientBuilder = HttpAsyncClients.custom().disableCookieManagement().setConnectionManager(connManager).setDefaultConnectionConfig(connConfig);
@@ -157,7 +158,7 @@ public class HttpBaseSupportUtil {
         CloseableHttpAsyncClient asyncHttpClient = httpClientBuilder.build();
         asyncHttpClient.start();
         asyncClients.put(cacheKey, new HttpAsyncClientNode(connManager, asyncHttpClient));
-        logger.info("CloseableHttpAsyncClient 初始化完成");
+        logger.info("CloseableHttpAsyncClient init completed");
         return asyncHttpClient;
     }
 
@@ -172,7 +173,7 @@ public class HttpBaseSupportUtil {
         if (clients.containsKey(cacheKey)) {
             return clients.get(cacheKey).getClient();
         } else {
-            logger.info("开始初始化 CloseableHttpClient");
+            logger.info("init CloseableHttpClient");
             ConnectionConfig connConfig = ConnectionConfig.custom().setBufferSize(131072).build();
             SocketConfig socketConfig = SocketConfig.custom().setSoTimeout(getIntParam("soTimeout", 180000)).build();
             RequestConfig requestConfig = RequestConfig.custom().setConnectTimeout(getIntParam("connectTimeout", 30000)).setSocketTimeout(getIntParam("soTimeout", 180000)).build();
@@ -188,7 +189,7 @@ public class HttpBaseSupportUtil {
 
             CloseableHttpClient httpClient = builder.build();
             clients.put(cacheKey, new HttpClientNode(connManager, httpClient));
-            logger.info("初始化 CloseableHttpClient 完成");
+            logger.info("CloseableHttpClient init completed");
             return httpClient;
         }
     }
@@ -203,7 +204,7 @@ public class HttpBaseSupportUtil {
 
     public static HttpGet buildHttpGet(String url, Object params, List<? extends Header> headers, boolean proxy, RequestConfig requestConfig) {
         if (params != null && !(params instanceof Map)) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("参数类型错误，对于 get 请求，参数类型必须为 map，但现在是 " + params.getClass().getName()));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("param type error ，type must be Map for GET request，but now is " + params.getClass().getName()));
         } else {
             StringBuilder fullUrl = new StringBuilder(url);
             if (params != null) {
@@ -279,11 +280,11 @@ public class HttpBaseSupportUtil {
         if (params == null) {
             return httpPost;
         } else if (transferType == null) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("无效的 post 请求（" + url + "），当存在 params 时，则必须指定 transferType"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("error POST request（" + url + "），must set transferType while params is not null"));
         } else {
             if (transferType == HTTP_CONTENT_TRANSFER_TYPE.KEY_VALUE) {
                 if (!(params instanceof Map) && !(params instanceof IDataModel)) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("请求（" + url + "）参数类型错误，对于 post 请求的 KEY_VALUE 形式，params 的类型仅能为 Map, IDataModel 中的其中一种，但现在是：" + params.getClass().getName()));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("request（" + url + "）params type error，params must be one of Map or IDataModel for POST request, but now is ：" + params.getClass().getName()));
                 }
 
                 Map<String, Object> paramsMap;
@@ -323,7 +324,7 @@ public class HttpBaseSupportUtil {
         InputStreamReader reader = null;
 
         try {
-            reader = new InputStreamReader(entity.getContent(), "UTF-8");
+            reader = new InputStreamReader(entity.getContent(), StandardCharsets.UTF_8);
             char[] tmp = new char[512];
 
             int len;
@@ -337,7 +338,7 @@ public class HttpBaseSupportUtil {
                 try {
                     reader.close();
                 } catch (IOException e) {
-                    logger.error("关闭流异常！" + e);
+                    logger.error("error while close stream！" + e);
                 }
             }
 
@@ -362,11 +363,11 @@ public class HttpBaseSupportUtil {
                 code = request.getCode();
                 url = request.getUrl();
                 if (code == null) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("批量异步请求前置检查失败：对于多个并发的异步请求，则必须为每个请求指定唯一标识符 code，但发现存在 code 为 null 的请求（url=" + url + "），因此所有请求拒绝执行"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("for batch requests ，must set unique code for every request，but fine a request（url=" + url + "）with null code , all of requests have be refused"));
                 }
             } while (codes.add(code));
 
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("批量异步请求前置检查失败：对于多个并发的异步请求，则必须为每个请求指定唯一标识符 code，但发现存在重复的 code 的请求（url=" + url + "），因此所有请求拒绝执行"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("for batch requests ，must set unique code for every request，but fine a request （url=" + url + "）with repeat code， all of requests have be refused"));
         }
     }
 
@@ -374,7 +375,7 @@ public class HttpBaseSupportUtil {
         if (params != null && params.containsKey(key)) {
             return Integer.parseInt(params.get(key) + "");
         } else {
-            logger.info("没有找到或没有配置该项 " + key + "，将使用其默认值 " + defaultValue);
+            logger.info("not found " + key + "，will use default value " + defaultValue);
             return defaultValue;
         }
     }
@@ -382,7 +383,7 @@ public class HttpBaseSupportUtil {
     public static void closeAsyncHttpClient() {
         try {
             if (asyncClients != null && asyncClients.size() > 0) {
-                logger.info("开始关闭 asyncClients");
+                logger.info("closing asyncClients");
 
                 for (HttpAsyncClientNode client : asyncClients.values()) {
                     client.getConnManager().shutdown();
@@ -391,7 +392,7 @@ public class HttpBaseSupportUtil {
                     }
                 }
 
-                logger.info("asyncClients 关闭完成");
+                logger.info("asyncClients closed");
             }
 
         } catch (Exception e) {
@@ -402,14 +403,14 @@ public class HttpBaseSupportUtil {
     public static void closeHttpClient() {
         try {
             if (clients != null && clients.size() > 0) {
-                logger.info("开始关闭 clients");
+                logger.info("closing clients");
 
                 for (HttpClientNode client : clients.values()) {
                     client.getConnManager().shutdown();
                     client.getClient().close();
                 }
 
-                logger.info("clients 关闭完成");
+                logger.info("clients closed");
             }
 
         } catch (Exception e) {

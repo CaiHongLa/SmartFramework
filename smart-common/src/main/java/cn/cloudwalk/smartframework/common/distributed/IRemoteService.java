@@ -1,4 +1,4 @@
-package cn.cloudwalk.smartframework.rpc.invoke;
+package cn.cloudwalk.smartframework.common.distributed;
 
 import cn.cloudwalk.smartframework.common.IBaseComponent;
 import cn.cloudwalk.smartframework.common.protocol.ProtocolIn;

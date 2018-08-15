@@ -44,10 +44,10 @@ public class DistributedMutexLockService extends BaseComponent implements IDistr
     @Override
     public void definedOrUse(String lockName, String path) {
         if (lockList.containsKey(lockName)) {
-            logger.info("已使用锁 " + lockName + "，在 " + path + " 上");
+            logger.info("used lock " + lockName + " from " + path);
         } else {
             lockList.put(lockName, new MutexLockInfo(lockName, path, new InterProcessMutex((CuratorFramework) this.zookeeperService.getClient(), path)));
-            logger.info("已声明锁 " + lockName + "，在 " + path + " 上");
+            logger.info("define lock " + lockName + " in " + path);
         }
     }
 
@@ -62,10 +62,10 @@ public class DistributedMutexLockService extends BaseComponent implements IDistr
         MutexLockInfo lock = lockList.get(lockName);
 
         try {
-            logger.info("正在尝试获取锁 " + lockName + "，最长等待时间 " + timeToWait + " " + timeUnit);
+            logger.info("trying to get the lock " + lockName + "，max wait time " + timeToWait + " " + timeUnit);
             boolean rs = lock.getLock().acquire(timeToWait, timeUnit);
             if (rs) {
-                logger.info("锁 " + lockName + " 获取成功");
+                logger.info("lock " + lockName + " get successfully");
                 if (ownerList.get() == null) {
                     Set<String> set = new HashSet<>();
                     ownerList.set(set);
@@ -73,7 +73,7 @@ public class DistributedMutexLockService extends BaseComponent implements IDistr
 
                 ownerList.get().add(lockName);
             } else {
-                logger.info("锁 " + lockName + " 获取失败");
+                logger.info("lock " + lockName + " get failed");
             }
 
             return rs;
@@ -84,32 +84,32 @@ public class DistributedMutexLockService extends BaseComponent implements IDistr
 
     @Override
     public void release(String lockName) {
-        logger.info("准备释放锁 " + lockName);
+        logger.info("trying to release lock " + lockName);
         Set<String> set = ownerList.get();
         if (set != null && set.contains(lockName)) {
             MutexLockInfo lock = lockList.get(lockName);
             try {
                 lock.getLock().release();
                 ownerList.get().remove(lockName);
-                logger.info("锁 " + lockName + " 释放成功");
+                logger.info("lock " + lockName + " release successfully");
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
             }
         } else {
-            logger.info("该线程不持有锁 " + lockName + ", 无需释放");
+            logger.info("the thread does not own the lock " + lockName + ", no need to release");
         }
 
     }
 
     @Override
     public void clear(String lockName) {
-        logger.info("准备清理锁 " + lockName);
+        logger.info("trying to clear lock " + lockName);
         MutexLockInfo info = lockList.get(lockName);
         if (info != null) {
             this.zookeeperService.deletePath(info.getPath());
-            logger.info("已成功清理锁 " + lockName);
+            logger.info("cleared lock " + lockName);
         } else {
-            logger.info("没有找到锁名称 " + lockName + "，清理操作无效");
+            logger.info("not found lock " + lockName + "，clear operation is invalid");
         }
 
     }

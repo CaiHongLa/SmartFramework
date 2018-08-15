@@ -1,4 +1,4 @@
-package cn.cloudwalk.smartframework.rpc.invoke;
+package cn.cloudwalk.smartframework.common.distributed;
 
 /**
  * Rpc异步调用回调接口

@@ -33,10 +33,10 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         accepts = transportContext.getParameter(ProtocolConstants.SERVER_ACCEPTS, 1000);
         try {
             doOpen();
-            logger.info(getClass().getSimpleName() + "服务在地址: " + getBindAddress() + "启动完成！");
+            logger.info(getClass().getSimpleName() + "Service at address: " + getBindAddress() + " start completion！");
         } catch (Throwable throwable) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(getClass().getSimpleName() + "服务在地址: " +
-                    getBindAddress() + "启动失败, 原因: " + throwable.getMessage()));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(getClass().getSimpleName() + "Service at address: " +
+                    getBindAddress() + "start failed, reason: " + throwable.getMessage()));
         }
     }
 
@@ -52,7 +52,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
     public void disconnected(Channel channel) throws TransportException {
         Collection<Channel> channels = getChannels();
         if (channels.size() == 0) {
-            logger.warn("所有连接已经从服务：" + getBindAddress() + "断开。服务器现在可以停止了！");
+            logger.warn("All connections have been disconnected from services：" + getBindAddress() + ", server can stop now.");
         }
         super.disconnected(channel);
     }
@@ -60,14 +60,14 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
     @Override
     public void connected(Channel channel) throws TransportException {
         if (this.isClosing() || this.isClosed()) {
-            logger.warn("服务器" + getClass().getSimpleName() + "/" + getBindAddress() + "处于正在关闭或已关闭状态，不再接受新的连接: " + channel);
+            logger.warn("Server " + getClass().getSimpleName() + "/" + getBindAddress() + " is on or off, no longer accept new connections: " + channel);
             channel.close();
             return;
         }
 
         Collection<Channel> channels = getChannels();
         if (accepts > 0 && channels.size() > accepts) {
-            logger.error("服务器" + getClass().getSimpleName() + "/" + getBindAddress() + "已经达到最大连接数：" + accepts + " ,不再接受新的连接: " + channel);
+            logger.error("Server " + getClass().getSimpleName() + "/" + getBindAddress() + " maximum number of connections has been reached：" + accepts + " ,no longer accept new connections: " + channel);
             channel.close();
             return;
         }
@@ -86,7 +86,7 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
 
     @Override
     public void close() {
-        logger.info("开始关闭" + getClass().getSimpleName() + " ，地址：" + getBindAddress());
+        logger.info("Close " + getClass().getSimpleName() + " ，address：" + getBindAddress());
         try {
             super.close();
         } catch (Throwable e) {

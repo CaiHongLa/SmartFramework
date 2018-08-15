@@ -32,7 +32,7 @@ public class NamedParamsBuilder {
     public static boolean integrityValidate(String sql, String[] keys) {
         for (String key : keys) {
             if (!sql.contains(key)) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("SQL 中缺少参数定义：" + key));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("lose param define in SQL：" + key));
             }
         }
 
@@ -147,7 +147,7 @@ public class NamedParamsBuilder {
             }
 
             if ((this.keys.get()).contains(key)) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("参数重复：" + key));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("param redefine：" + key));
             }
 
             (this.keys.get()).add(key);
@@ -162,7 +162,7 @@ public class NamedParamsBuilder {
     public String[] getKeys() {
         boolean mode = this.isGroupMode();
         if (mode) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("GROUP 模式下不能执行此方法"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("GROUP model not support"));
         } else {
             LinkedList<String> keys = this.keys.get();
             String[] result;
@@ -180,7 +180,7 @@ public class NamedParamsBuilder {
     public Object[] getValues() {
         boolean mode = this.isGroupMode();
         if (mode) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("GROUP 模式下不能执行此方法"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("GROUP model not support"));
         } else {
             LinkedList<Object> values = this.values.get();
             Object[] result;
@@ -198,7 +198,7 @@ public class NamedParamsBuilder {
     public Map<String, Object> getAll() {
         boolean mode = this.isGroupMode();
         if (mode) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("GROUP 模式下不能执行此方法"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("GROUP model not support"));
         } else {
             Map<String, Object> all = new LinkedHashMap<>();
             String[] keys = this.getKeys();
@@ -221,7 +221,7 @@ public class NamedParamsBuilder {
     public SqlParameterSource toSqlParameterSource() {
         boolean mode = this.isGroupMode();
         if (mode) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("GROUP 模式下不能执行此方法"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("GROUP model not support"));
         } else {
             return new MapSqlParameterSource(this.getAll());
         }

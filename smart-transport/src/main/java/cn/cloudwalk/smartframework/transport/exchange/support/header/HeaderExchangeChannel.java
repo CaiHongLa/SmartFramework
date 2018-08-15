@@ -29,7 +29,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
 
     HeaderExchangeChannel(Channel channel) {
         if (channel == null) {
-            throw new IllegalArgumentException("channel不能为空！");
+            throw new IllegalArgumentException("channel can not be null！");
         }
         this.channel = channel;
     }
@@ -63,7 +63,7 @@ final class HeaderExchangeChannel implements ExchangeChannel {
     @Override
     public void send(Object message, boolean sent) throws TransportException {
         if (closed) {
-            throw new TransportException(this.getLocalAddress(), null, "发送消息：" + message + "失败，" + this + "已经关闭！");
+            throw new TransportException(this.getLocalAddress(), null, "send message：" + message + " failed，" + this + " is closed！");
         }
         channel.send(message, sent);
     }

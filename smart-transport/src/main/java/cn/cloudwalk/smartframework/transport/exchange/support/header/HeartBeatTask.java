@@ -49,8 +49,8 @@ final class HeartBeatTask implements Runnable {
                         //发送心跳数据
                     }
                     if (lastRead != null && now - lastRead > heartbeatTimeout) {
-                        logger.warn("关闭连接：" + channel
-                                + ", 因为长时间没有收到数据，超时时间： " + heartbeatTimeout + "ms");
+                        logger.warn("close channel：" + channel
+                                + ", because no data was received for a long time, timeout time： " + heartbeatTimeout + "ms");
                         if (channel instanceof Client) {
                             try {
                                 ((Client) channel).reconnect();
@@ -61,11 +61,11 @@ final class HeartBeatTask implements Runnable {
                         }
                     }
                 } catch (Throwable t) {
-                    logger.warn("心跳线程异常，" + channel.getRemoteAddress(), t);
+                    logger.warn("Heartbeat thread exception ，" + channel.getRemoteAddress(), t);
                 }
             }
         } catch (Throwable t) {
-            logger.warn("心跳线程出现不可控制的异常: " + t.getMessage(), t);
+            logger.warn("Uncontrollable exceptions in heartbeat threads : " + t.getMessage(), t);
         }
     }
 

@@ -18,7 +18,7 @@ public abstract class AbstractChannel extends AbstractPeer implements Channel {
     @Override
     public void send(Object message, boolean sent) throws TransportException {
         if (isClosed()) {
-            throw new IllegalStateException("服务已经关闭不能发送消息 :" + getRemoteAddress());
+            throw new IllegalStateException("The service has been closed and no message can be sent :" + getRemoteAddress());
         }
     }
 

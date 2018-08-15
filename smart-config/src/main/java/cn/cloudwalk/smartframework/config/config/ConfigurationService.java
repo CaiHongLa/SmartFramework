@@ -26,11 +26,11 @@ public class ConfigurationService extends BaseComponent implements IConfiguratio
     @PostConstruct
     private void initApplicationConfig() {
         if (!FileUtil.isFileExistOnClasspathOrConfigDir(APPLICATION_CFG_FILE_NAME)) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("在类路径下没有找到配置文件 " + APPLICATION_CFG_FILE_NAME));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("No " + APPLICATION_CFG_FILE_NAME+ " file were found under classpath. \""));
         } else {
-            logger.info("开始加载配置文件 " + APPLICATION_CFG_FILE_NAME);
+            logger.info("loading " + APPLICATION_CFG_FILE_NAME);
             this.applicationCfg = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir(APPLICATION_CFG_FILE_NAME);
-            logger.info("配置文件 " + APPLICATION_CFG_FILE_NAME + " 加载完成：" + this.applicationCfg);
+            logger.info(APPLICATION_CFG_FILE_NAME + " loaded ：" + this.applicationCfg);
         }
     }
 

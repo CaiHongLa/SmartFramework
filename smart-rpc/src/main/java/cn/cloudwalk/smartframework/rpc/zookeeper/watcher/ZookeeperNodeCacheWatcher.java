@@ -26,11 +26,11 @@ public class ZookeeperNodeCacheWatcher extends BaseComponent implements IZookeep
 
     @Override
     public void watch(Closeable client, String path) {
-        logger.info("开始启动 zookeeper watcher（path=" + path + "）");
+        logger.info("start zookeeper watcher（path=" + path + "）");
         this.cache = new TreeCache((CuratorFramework) client, path);
         try {
             this.cache.start();
-            logger.info("zookeeper watcher 启动成功");
+            logger.info("zookeeper watcher started");
         } catch (Exception var4) {
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(var4));
         }

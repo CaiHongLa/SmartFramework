@@ -90,12 +90,12 @@ public class HttpChannel extends AbstractChannel {
                 throw cause;
             }
         } catch (Throwable e) {
-            throw new TransportException(this, "发送消息：" + message + " 到 " + getRemoteAddress() + ", 异常: " + e.getMessage(), e);
+            throw new TransportException(this, "send message ：" + message + " to " + getRemoteAddress() + ", error: " + e.getMessage(), e);
         }
 
         if (!success) {
-            throw new TransportException(this, "发送消息：" + message + " 到 " + getRemoteAddress()
-                    + "，超时：" + timeout + "ms");
+            throw new TransportException(this, "send message ：" + message + " to " + getRemoteAddress()
+                    + "，timeout：" + timeout + "ms");
         }
     }
 
@@ -117,7 +117,7 @@ public class HttpChannel extends AbstractChannel {
             logger.warn(e.getMessage(), e);
         }
         try {
-            logger.info("关闭连接：" + channel);
+            logger.info("close channel：" + channel);
             channel.close();
         } catch (Exception e) {
             logger.warn(e.getMessage(), e);

@@ -24,6 +24,6 @@ public abstract class BusinessException extends BaseException {
 
     @Override
     public String defShortName() {
-        return "业务异常";
+        return "Business Exception";
     }
 }

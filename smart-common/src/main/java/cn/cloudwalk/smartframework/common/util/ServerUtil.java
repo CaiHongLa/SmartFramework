@@ -22,12 +22,11 @@ public class ServerUtil {
     private static Logger logger = LogManager.getLogger(ServerUtil.class);
 
     public static Integer getTomcatPortFromXmlConfig(ServletContext servletContext) {
-        logger.info("开始根据 tomcat 配置获取端口号");
+        logger.info("get tomcat port from tomcat real path");
         String basePath = servletContext.getRealPath("/");
-        logger.info("准备以 " + basePath + " 为基路径获取 tomcat 的 server.xml 配置文件");
+        logger.info("based from " + basePath + " to get tomcat server.xml");
         String serverXmlPath = (new File(basePath)).getParentFile().getParentFile() + File.separator + "conf" + File.separator + "server.xml";
-        logger.info("已定位到 tomcat server.xml 目录 " + serverXmlPath);
-        Integer port;
+        logger.info("found tomcat server.xml path " + serverXmlPath);
 
         try {
             DocumentBuilderFactory domFactory = DocumentBuilderFactory.newInstance();

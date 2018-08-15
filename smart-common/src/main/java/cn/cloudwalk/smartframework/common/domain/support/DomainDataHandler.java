@@ -81,7 +81,7 @@ public class DomainDataHandler {
         try {
             for (TableColumnDef column : this.metadata.getColumns()) {
                 Object value = this.getValue(column.getName());
-                if (value != null && value instanceof String) {
+                if (value instanceof String) {
                     this.setValue(column.getName(), new String((value + "").getBytes(sourceCharset), targetCharset));
                 }
             }

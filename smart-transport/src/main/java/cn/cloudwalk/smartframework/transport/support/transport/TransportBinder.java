@@ -25,10 +25,10 @@ public class TransportBinder {
 
     public static Server bind(TransportContext transportContext, ChannelHandler... handlers) {
         if (transportContext == null) {
-            throw new IllegalArgumentException("transportContext不能为空！");
+            throw new IllegalArgumentException("transportContext can not be null！");
         }
         if (handlers == null || handlers.length == 0) {
-            throw new IllegalArgumentException("handlers不能为空！");
+            throw new IllegalArgumentException("handlers can not be null！");
         }
         ChannelHandler handler;
         if (handlers.length == 1) {
@@ -42,7 +42,7 @@ public class TransportBinder {
 
     public static Client connect(TransportContext transportContext, ChannelHandler... handlers) {
         if (transportContext == null) {
-            throw new IllegalArgumentException("transportContext不能为空！");
+            throw new IllegalArgumentException("transportContext can not be null！");
         }
         ChannelHandler handler;
         if (handlers == null || handlers.length == 0) {

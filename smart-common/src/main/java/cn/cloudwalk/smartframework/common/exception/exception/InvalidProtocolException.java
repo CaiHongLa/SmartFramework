@@ -18,6 +18,6 @@ public class InvalidProtocolException extends ProtocolException {
 
     @Override
     public String defShortName() {
-        return "无效的协议异常";
+        return "Invalid Protocol Exception";
     }
 }

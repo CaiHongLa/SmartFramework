@@ -24,6 +24,6 @@ public abstract class ProtocolException extends BaseException {
 
     @Override
     public String defShortName() {
-        return "协议异常";
+        return "Protocol Exception";
     }
 }

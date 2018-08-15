@@ -56,7 +56,7 @@ public class NettyRpcService extends BaseComponent implements INettyRpcService {
         Properties nettyConfig = zookeeperService.getZookeeperConfig();
         String rpcPort = nettyConfig.getProperty(ProtocolConstants.RPC_HTTP_SERVER_PORT);
         if (TextUtil.isEmpty(rpcPort)) {
-            logger.error("缺少" + ProtocolConstants.RPC_HTTP_SERVER_PORT + "配置, 无法启动Rpc服务!");
+            logger.error("lose " + ProtocolConstants.RPC_HTTP_SERVER_PORT + " config, cannot start rpc server!");
             port = 0;
         }
         port = Integer.parseInt(rpcPort);
@@ -90,16 +90,16 @@ public class NettyRpcService extends BaseComponent implements INettyRpcService {
             protocol.bind();
             server = protocol.getServer();
         } catch (TransportException e) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("启动Rpc服务失败", e));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("start rpc server failed", e));
         }
     }
 
     @PreDestroy
     public void stop() {
-        logger.info("开始关闭Rpc服务！");
+        logger.info("closing rpc server！");
         if (protocol != null) {
             protocol.destroy();
         }
-        logger.info("关闭Rpc服务完成！");
+        logger.info("rpc server closed！");
     }
 }

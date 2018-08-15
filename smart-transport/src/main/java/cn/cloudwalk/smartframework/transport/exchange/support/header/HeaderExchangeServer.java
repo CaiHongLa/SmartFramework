@@ -50,7 +50,7 @@ public class HeaderExchangeServer implements ExchangeServer {
         this.heartbeat = server.getTransportContext().getParameter(ProtocolConstants.EXCHANGE_HEART_BEAT_TIME, 60000);
         this.heartbeatTimeout = server.getTransportContext().getParameter(ProtocolConstants.EXCHANGE_HEART_BEAT_TIMEOUT, 300000);
         if (heartbeatTimeout < heartbeat * 2) {
-            throw new IllegalStateException(ProtocolConstants.EXCHANGE_HEART_BEAT_TIMEOUT + "应该不小于" + ProtocolConstants.EXCHANGE_HEART_BEAT_TIME + "的两倍！");
+            throw new IllegalStateException(ProtocolConstants.EXCHANGE_HEART_BEAT_TIMEOUT + " should not be less than " + ProtocolConstants.EXCHANGE_HEART_BEAT_TIME + " two times！");
         }
         startHeartbeatTimer();
     }
@@ -149,7 +149,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     @Override
     public void send(Object message) throws TransportException {
         if (closed.get()) {
-            throw new TransportException(this.getLocalAddress(), null, "发送消息：" + message + "失败， " + getLocalAddress() + " 已经关闭!");
+            throw new TransportException(this.getLocalAddress(), null, "send message：" + message + " failed， " + getLocalAddress() + " is closed!");
         }
         server.send(message);
     }
@@ -157,7 +157,7 @@ public class HeaderExchangeServer implements ExchangeServer {
     @Override
     public void send(Object message, boolean sent) throws TransportException {
         if (closed.get()) {
-            throw new TransportException(this.getLocalAddress(), null, "发送消息：" + message + "失败， " + getLocalAddress() + " 已经关闭!");
+            throw new TransportException(this.getLocalAddress(), null, "send message：" + message + " failed， " + getLocalAddress() + " is closed!");
         }
         server.send(message, sent);
     }
