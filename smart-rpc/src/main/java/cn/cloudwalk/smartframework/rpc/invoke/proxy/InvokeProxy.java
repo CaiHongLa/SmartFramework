@@ -36,7 +36,7 @@ public class InvokeProxy<T> implements InvocationHandler, AsyncInvokeProxy {
     }
 
     @Override
-    public <V> NettyRpcResponseFuture<V> asyncCall(Class<V> type, String methodName, Object[] args) {
+    public NettyRpcResponseFuture asyncCall(Class<?> type, String methodName, Object[] args) {
         NettyRpcRequest request = createRequest(args);
         return RequestHelper.sendRequest(ip, port, type, clazz.getName().replace(".", "/"), methodName, request);
     }

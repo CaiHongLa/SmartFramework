@@ -7,6 +7,7 @@ import cn.cloudwalk.smartframework.common.util.HttpUtil;
 import cn.cloudwalk.smartframework.common.util.JsonUtil;
 import cn.cloudwalk.smartframework.common.util.ReflectUtil;
 import cn.cloudwalk.smartframework.common.util.http.async.AsyncCallbackAdapter;
+import cn.cloudwalk.smartframework.common.util.http.async.AsyncRpcCallBack;
 import cn.cloudwalk.smartframework.common.util.http.bean.HTTP_CONTENT_TRANSFER_TYPE;
 import cn.cloudwalk.smartframework.common.util.http.bean.HttpRequest;
 import cn.cloudwalk.smartframework.rpc.netty.codec.SerializationUtil;
@@ -70,7 +71,7 @@ public final class RequestHelper {
             //服务方将异常包装成FrameworkInternalSystemException，这里直接抛出给调用方，由调用方处理
             throw error;
         }
-        return response.getValue();
+        return response.getResult();
     }
 
     /**
@@ -82,27 +83,26 @@ public final class RequestHelper {
      * @param className  目标接口地址
      * @param methodName 目标方法
      * @param request    请求实体
-     * @param <V>        返回数据类型
      * @return V
      */
     @SuppressWarnings("unchecked")
-    public static <V> NettyRpcResponseFuture<V> sendRequest(String ip, int port, Class<V> type, String className, String methodName, NettyRpcRequest request) {
+    public static  NettyRpcResponseFuture sendRequest(String ip, int port, Class<?> type, String className, String methodName, NettyRpcRequest request) {
         final String requestId = buildRequestId();
         final String url = buildUrl(ip, port, className, methodName, requestId, false);
         logger.info("ready to send a request：" + url);
         logger.info("request params：" + request);
-        NettyRpcResponseFuture<V> nettyRpcResponseFuture = new NettyRpcResponseFuture<>(requestId, className, methodName);
+        NettyRpcResponseFuture nettyRpcResponseFuture = new NettyRpcResponseFuture(requestId, className, methodName);
         FutureSet.futureMap.put(requestId, nettyRpcResponseFuture);
         Map<String, byte[]> params = buildParam(request);
-        HttpUtil.Async.post(new HttpRequest(url, params, HTTP_CONTENT_TRANSFER_TYPE.JSON), new AsyncCallbackAdapter() {
+        HttpUtil.Async.postRpc(new HttpRequest(url, params, HTTP_CONTENT_TRANSFER_TYPE.JSON), new AsyncRpcCallBack() {
 
             @Override
             public void onError(Exception e, HttpRequest metadata) {
                 logger.error("request error", e);
-                NettyRpcResponseFuture<V> future = FutureSet.futureMap.get(requestId);
+                NettyRpcResponseFuture future = FutureSet.futureMap.get(requestId);
                 if (future != null) {
                     FutureSet.futureMap.remove(requestId);
-                    NettyRpcResponse<V> response = new NettyRpcResponse<>();
+                    NettyRpcResponse response = new NettyRpcResponse();
                     response.setRequestId(requestId);
                     response.setError(e);
                     future.done(response);
@@ -111,13 +111,9 @@ public final class RequestHelper {
 
             @Override
             @SuppressWarnings("unchecked")
-            public void onComplete(String responseText, HttpRequest metadata, StatusLine status) {
-                logger.info("request result：" + responseText);
-                NettyRpcResponse<V> response = JsonUtil.json2Object(responseText, NettyRpcResponse.class);
-                Object result = response.getResult();
-                if (result != null) {
-                    response.setValue(JsonUtil.json2Object(JsonUtil.object2Json(result), type));
-                }
+            public void onComplete(byte[] data, HttpRequest metadata, StatusLine status) {
+                NettyRpcResponse response = SerializationUtil.deserialize(data, NettyRpcResponse.class);
+                logger.info("request result：" + response);
                 String requestId = response.getRequestId();
                 NettyRpcResponseFuture future = FutureSet.futureMap.get(requestId);
                 if (future != null) {

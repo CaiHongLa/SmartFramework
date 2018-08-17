@@ -6,9 +6,9 @@ package cn.cloudwalk.smartframework.common.distributed;
  * @author LIYANHUI
  * @since 1.0.0
  */
-public interface AsyncCallBack<V> {
+public interface AsyncCallBack {
 
-    void onSuccess(V result);
+    void onSuccess(Object result);
 
     void onError(Exception e);
 }

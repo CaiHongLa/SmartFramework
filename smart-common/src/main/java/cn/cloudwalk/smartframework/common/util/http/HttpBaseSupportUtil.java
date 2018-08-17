@@ -45,9 +45,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.web.util.UriUtils;
 
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
@@ -345,6 +343,24 @@ public class HttpBaseSupportUtil {
         }
 
         return content.toString();
+    }
+
+    public static byte[] getResponseByte(HttpResponse response) {
+        HttpEntity entity = response.getEntity();
+        try {
+            InputStream is = entity.getContent();
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            byte[] buffer = new byte[new Long(entity.getContentLength()).intValue()];
+            int ch;
+            while ((ch = is.read(buffer)) != -1) {
+                byteArrayOutputStream.write(buffer, 0, ch);
+            }
+            byte data[] = byteArrayOutputStream.toByteArray();
+            byteArrayOutputStream.close();
+            return data;
+        } catch (Exception e) {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
+        }
     }
 
     public static void checkRequestCodeConfig(List<HttpRequest> requestList) {

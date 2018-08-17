@@ -19,7 +19,7 @@ import java.util.concurrent.locks.ReentrantLock;
  * @see NettyRpcResponse
  * @since 1.0.0
  */
-public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
+public class NettyRpcResponseFuture implements Future<NettyRpcResponse> {
 
     private Logger logger = LogManager.getLogger(NettyRpcResponseFuture.class);
 
@@ -31,7 +31,7 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
     /**
      * rpc结果
      */
-    private NettyRpcResponse<V> response;
+    private NettyRpcResponse response;
 
     /**
      * 请求开始时间
@@ -61,7 +61,7 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
     /**
      * 回调集合
      */
-    private List<AsyncCallBack<V>> pendingCallbacks = new ArrayList<>();
+    private List<AsyncCallBack> pendingCallbacks = new ArrayList<>();
 
     public NettyRpcResponseFuture(String requestId, String className, String methodName) {
         this.sync = new Sync();
@@ -77,7 +77,7 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
     }
 
     @Override
-    public NettyRpcResponse<V> get() {
+    public NettyRpcResponse get() {
         sync.acquire(-1);
         if (this.response != null) {
             return this.response;
@@ -87,7 +87,7 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
     }
 
     @Override
-    public NettyRpcResponse<V> get(long timeout, TimeUnit unit) throws InterruptedException {
+    public NettyRpcResponse get(long timeout, TimeUnit unit) throws InterruptedException {
         boolean success = sync.tryAcquireNanos(-1, unit.toNanos(timeout));
         if (success) {
             if (this.response != null) {
@@ -117,7 +117,7 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
      *
      * @param response 返回结果
      */
-    public void done(NettyRpcResponse<V> response) {
+    public void done(NettyRpcResponse response) {
         this.response = response;
         sync.release(1);
         invokeCallbacks();
@@ -134,7 +134,7 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
     private void invokeCallbacks() {
         lock.lock();
         try {
-            for (final AsyncCallBack<V> callback : pendingCallbacks) {
+            for (final AsyncCallBack callback : pendingCallbacks) {
                 runCallback(callback);
             }
         } finally {
@@ -148,7 +148,7 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
      * @param callback AsyncCallBack
      * @return NettyRpcResponseFuture
      */
-    public NettyRpcResponseFuture<V> addCallback(AsyncCallBack<V> callback) {
+    public NettyRpcResponseFuture addCallback(AsyncCallBack callback) {
         lock.lock();
         try {
             if (isDone()) {
@@ -162,9 +162,9 @@ public class NettyRpcResponseFuture<V> implements Future<NettyRpcResponse> {
         return this;
     }
 
-    private void runCallback(final AsyncCallBack<V> callback) {
+    private void runCallback(final AsyncCallBack callback) {
         if (!response.isError()) {
-            callback.onSuccess(response.getValue());
+            callback.onSuccess(response.getResult());
         } else {
             callback.onError(response.getError());
         }

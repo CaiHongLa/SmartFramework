@@ -8,7 +8,7 @@ import cn.cloudwalk.smartframework.common.model.BaseDataModel;
  * @author LIYANHUI
  * @since 1.0.0
  */
-public class NettyRpcResponse<Value> extends BaseDataModel {
+public class NettyRpcResponse extends BaseDataModel {
 
     /**
      * 请求ID
@@ -25,10 +25,6 @@ public class NettyRpcResponse<Value> extends BaseDataModel {
      */
     private Object result;
 
-    /**
-     * 具体的返回值
-     */
-    private Value value;
 
     public boolean isError() {
         return error != null;
@@ -58,13 +54,6 @@ public class NettyRpcResponse<Value> extends BaseDataModel {
         this.result = result;
     }
 
-    public Value getValue() {
-        return value;
-    }
-
-    public void setValue(Value value) {
-        this.value = value;
-    }
 
     @Override
     public String toString() {
