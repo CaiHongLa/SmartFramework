@@ -66,6 +66,7 @@ public class RpcInvoker<T> {
         NettyRpcResponseFuture nettyRpcResponseFuture = RpcRequestHelper.sendRequest(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), request);
         if(isAsync()){
             result.setFuture(nettyRpcResponseFuture);
+            RpcContext.getContext().setFuture(nettyRpcResponseFuture);
             return result;
         }
         NettyRpcResponse response = nettyRpcResponseFuture.get();

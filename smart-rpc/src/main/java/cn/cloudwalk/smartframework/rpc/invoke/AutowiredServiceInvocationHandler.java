@@ -53,7 +53,7 @@ public class AutowiredServiceInvocationHandler implements InvocationHandler {
                 port = node.getPort();
                 RpcResult result = invoker.invoke(new RpcInvocation(ip, port, className, method, args));
                 if(invoker.isAsync()){
-                    return result.getFuture();
+                    return null;
                 }
                 return result.getValueIfHasException();
             } else {

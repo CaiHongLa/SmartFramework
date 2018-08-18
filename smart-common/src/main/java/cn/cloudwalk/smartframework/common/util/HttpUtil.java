@@ -433,6 +433,7 @@ public class HttpUtil {
         public static AsyncRpcExecuteResult requestRpc(List<HttpRequest> requestList, boolean proxy, RequestConfig requestConfig, final AsyncRpcCallBack callback) {
             HttpBaseSupportUtil.checkRequestCodeConfig(requestList);
             final AsyncRpcExecuteResult executeRpcResult = new AsyncRpcExecuteResult();
+            final CountDownLatch countDownLatch = new CountDownLatch(requestList.size());
 
             for (HttpRequest metadata : requestList) {
                 final HttpRequestBase request;
@@ -460,6 +461,8 @@ public class HttpUtil {
                             }
                         } catch (Exception e) {
                             logger.error("cached http client callback error " + e);
+                        } finally {
+                            countDownLatch.countDown();
                         }
                     }
 
@@ -471,6 +474,8 @@ public class HttpUtil {
                             executeRpcResult.addError(metadata.getCode(), new HttpErrorDetail(metadata, ex));
                         } catch (Exception e) {
                             logger.error("cached http client callback error " + e);
+                        } finally {
+                            countDownLatch.countDown();
                         }
                     }
 
@@ -480,12 +485,15 @@ public class HttpUtil {
                             request.releaseConnection();
                         } catch (Exception e) {
                             logger.error("cached http client callback error " + e);
+                        } finally {
+                            countDownLatch.countDown();
                         }
                     }
                 });
             }
 
             try {
+                countDownLatch.await();
                 return executeRpcResult;
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
