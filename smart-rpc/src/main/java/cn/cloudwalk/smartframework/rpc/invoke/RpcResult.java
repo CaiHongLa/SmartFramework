@@ -13,11 +13,6 @@ public class RpcResult {
 
     private Object value;
     private Throwable exception;
-    private NettyRpcResponseFuture future;
-
-    public RpcResult(NettyRpcResponseFuture future) {
-        this.future = future;
-    }
 
     public RpcResult(Object result) {
         this.value = result;
@@ -47,13 +42,6 @@ public class RpcResult {
         this.value = value;
     }
 
-    public NettyRpcResponseFuture getFuture() {
-        return future;
-    }
-
-    public void setFuture(NettyRpcResponseFuture future) {
-        this.future = future;
-    }
 
     public Object getValueIfHasException() throws Throwable {
         if (hasException()) {
@@ -67,7 +55,6 @@ public class RpcResult {
         return "RpcResult{" +
                 "value=" + value +
                 ", exception=" + exception +
-                ", future=" + future +
                 '}';
     }
 }
