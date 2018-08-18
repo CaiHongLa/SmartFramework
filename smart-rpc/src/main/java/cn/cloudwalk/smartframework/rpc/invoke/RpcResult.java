@@ -1,7 +1,5 @@
 package cn.cloudwalk.smartframework.rpc.invoke;
 
-import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFuture;
-
 /**
  * Rpc响应结果
  *
