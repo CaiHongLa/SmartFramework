@@ -41,4 +41,19 @@ public class RpcInvokeService extends BaseComponent implements IRpcInvokeService
         }
     }
 
+    @Override
+    @SuppressWarnings("unchecked")
+    public <F> F asyncCall(Class<F> interfaceClass, String zookeeperId) {
+        IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
+        if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
+            RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService, true);
+            return (F) Proxy.newProxyInstance(
+                    interfaceClass.getClassLoader(),
+                    new Class<?>[]{interfaceClass},
+                    new AutowiredServiceInvocationHandler(invoker));
+        } else {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE not support rpc！"));
+        }
+    }
+
 }

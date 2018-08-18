@@ -51,7 +51,11 @@ public class AutowiredServiceInvocationHandler implements InvocationHandler {
             if (node instanceof RpcServiceProvider) {
                 ip = node.getIp();
                 port = node.getPort();
-                return invoker.invoke(new RpcInvocation(ip, port, className, method, args)).getValueIfHasException();
+                RpcResult result = invoker.invoke(new RpcInvocation(ip, port, className, method, args));
+                if(invoker.isAsync()){
+                    return result.getFuture();
+                }
+                return result.getValueIfHasException();
             } else {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC invoke node error！"));
             }

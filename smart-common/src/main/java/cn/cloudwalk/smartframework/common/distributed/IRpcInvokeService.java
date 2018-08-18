@@ -9,4 +9,6 @@ package cn.cloudwalk.smartframework.common.distributed;
 public interface IRpcInvokeService {
 
     <F> F syncCall(Class<F> interfaceClass, String zookeeperId);
+
+    <F> F asyncCall(Class<F> interfaceClass, String zookeeperId);
 }

@@ -37,15 +37,16 @@ public class AutowiredServiceBeanProcessor implements BeanPostProcessor {
             if (isAutoService) {
                 AutowiredService autowiredService = field.getAnnotation(AutowiredService.class);
                 String zookeeperId = autowiredService.value();
+                boolean async = autowiredService.async();
                 Class<?> interfaceClass = field.getType();
-                RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService);
+                RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService, async);
                 Object value = Proxy.newProxyInstance(
                             interfaceClass.getClassLoader(),
                             new Class<?>[]{interfaceClass},
                             new AutowiredServiceInvocationHandler(invoker));
                 ReflectionUtils.makeAccessible(field);
                 field.set(bean, value);
-                logger.debug("Registered autowired service " + interfaceClass.getSimpleName() + " on zookeeper id : " + zookeeperId);
+                logger.debug("Registered autowired service : " + interfaceClass.getSimpleName() + " annotated by " + autowiredService + " on zookeeper id : " + zookeeperId);
             }
         });
         return bean;

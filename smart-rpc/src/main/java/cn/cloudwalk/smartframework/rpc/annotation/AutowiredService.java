@@ -25,10 +25,10 @@ public @interface AutowiredService {
 
 
     /**
-     * 是否使用异步
+     * 是否使用异步,异步调用时返回的结果不是真实结果 而是 Future 需要调用时处理Future
      *
      * @return
      */
-//    boolean async() default false;
+    boolean async() default false;
 
 }

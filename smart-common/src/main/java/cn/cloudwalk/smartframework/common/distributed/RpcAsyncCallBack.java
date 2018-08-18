@@ -6,7 +6,7 @@ package cn.cloudwalk.smartframework.common.distributed;
  * @author LIYANHUI
  * @since 1.0.0
  */
-public interface AsyncCallBack {
+public interface RpcAsyncCallBack {
 
     void onSuccess(Object result);
 

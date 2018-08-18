@@ -18,6 +18,8 @@ public class RpcInvoker<T> {
 
     private static final Logger logger = LogManager.getLogger(RpcInvoker.class);
 
+    private boolean async;
+
     private final Class<T> type;
 
     private String zookeeperId;
@@ -25,9 +27,18 @@ public class RpcInvoker<T> {
     private IZookeeperService zookeeperService;
 
     public RpcInvoker(Class<T> type, String zookeeperId, IZookeeperService zookeeperService) {
+        this(type, zookeeperId, zookeeperService, false);
+    }
+
+    public RpcInvoker(Class<T> type, String zookeeperId, IZookeeperService zookeeperService, boolean async) {
         this.type = type;
         this.zookeeperId = zookeeperId;
         this.zookeeperService = zookeeperService;
+        this.async = async;
+    }
+
+    public boolean isAsync() {
+        return async;
     }
 
     public Class<T> getInterface() {
@@ -53,6 +64,10 @@ public class RpcInvoker<T> {
             return result;
         }
         NettyRpcResponseFuture nettyRpcResponseFuture = RpcRequestHelper.sendRequest(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), request);
+        if(isAsync()){
+            result.setFuture(nettyRpcResponseFuture);
+            return result;
+        }
         NettyRpcResponse response = nettyRpcResponseFuture.get();
         result.setValue(response.getResult());
         result.setException(response.getError());

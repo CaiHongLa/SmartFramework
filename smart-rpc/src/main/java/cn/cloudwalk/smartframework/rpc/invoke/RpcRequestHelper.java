@@ -23,7 +23,7 @@ import java.util.UUID;
  * @date 2018/8/15
  * @since 2.0.10
  */
-public final class RpcRequestHelper {
+final class RpcRequestHelper {
 
     private static final Logger logger = LogManager.getLogger(RpcRequestHelper.class);
 
@@ -42,7 +42,7 @@ public final class RpcRequestHelper {
      * @return V
      */
     @SuppressWarnings("unchecked")
-    public static NettyRpcResponseFuture sendRequest(String ip, int port, String className, String methodName, NettyRpcRequest request) {
+    static NettyRpcResponseFuture sendRequest(String ip, int port, String className, String methodName, NettyRpcRequest request) {
         final String requestId = buildRequestId();
         final String url = buildUrl(ip, port, className, methodName, requestId, false);
         logger.info("ready to send a request：" + url);
@@ -90,7 +90,7 @@ public final class RpcRequestHelper {
      * @param methodName 目标方法
      * @param request    请求实体
      */
-    public static void sendRequestOneWay(String ip, int port, String className, String methodName, NettyRpcRequest request) {
+    static void sendRequestOneWay(String ip, int port, String className, String methodName, NettyRpcRequest request) {
         final String requestId = buildRequestId();
         final String url = buildUrl(ip, port, className, methodName, requestId, true);
         logger.info("ready to send an one way request：" + url);

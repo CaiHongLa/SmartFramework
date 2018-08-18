@@ -1,6 +1,6 @@
 package cn.cloudwalk.smartframework.common.distributed.bean;
 
-import cn.cloudwalk.smartframework.common.distributed.AsyncCallBack;
+import cn.cloudwalk.smartframework.common.distributed.RpcAsyncCallBack;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,7 +61,7 @@ public class NettyRpcResponseFuture implements Future<NettyRpcResponse> {
     /**
      * 回调集合
      */
-    private List<AsyncCallBack> pendingCallbacks = new ArrayList<>();
+    private List<RpcAsyncCallBack> pendingCallbacks = new ArrayList<>();
 
     public NettyRpcResponseFuture(String requestId, String className, String methodName) {
         this.sync = new Sync();
@@ -134,7 +134,7 @@ public class NettyRpcResponseFuture implements Future<NettyRpcResponse> {
     private void invokeCallbacks() {
         lock.lock();
         try {
-            for (final AsyncCallBack callback : pendingCallbacks) {
+            for (final RpcAsyncCallBack callback : pendingCallbacks) {
                 runCallback(callback);
             }
         } finally {
@@ -145,10 +145,10 @@ public class NettyRpcResponseFuture implements Future<NettyRpcResponse> {
     /**
      * 添加一个回调时间
      *
-     * @param callback AsyncCallBack
+     * @param callback RpcAsyncCallBack
      * @return NettyRpcResponseFuture
      */
-    public NettyRpcResponseFuture addCallback(AsyncCallBack callback) {
+    public NettyRpcResponseFuture addCallback(RpcAsyncCallBack callback) {
         lock.lock();
         try {
             if (isDone()) {
@@ -162,7 +162,7 @@ public class NettyRpcResponseFuture implements Future<NettyRpcResponse> {
         return this;
     }
 
-    private void runCallback(final AsyncCallBack callback) {
+    private void runCallback(final RpcAsyncCallBack callback) {
         if (!response.isError()) {
             callback.onSuccess(response.getResult());
         } else {
