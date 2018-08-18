@@ -1,7 +1,5 @@
 package cn.cloudwalk.smartframework.rpc.annotation;
 
-import cn.cloudwalk.smartframework.common.domain.BaseDomain;
-
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
@@ -23,13 +21,14 @@ public @interface AutowiredService {
      *
      * @return
      */
-    String id() default "";
+    String value() default "";
+
 
     /**
-     * Service使用的实体类
+     * 是否使用异步
      *
      * @return
      */
-    Class<? extends BaseDomain> entity() default BaseDomain.class;
+//    boolean async() default false;
 
 }

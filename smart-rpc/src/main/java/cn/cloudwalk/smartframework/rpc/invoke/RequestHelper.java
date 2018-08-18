@@ -4,9 +4,6 @@ import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcRequest;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponse;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFuture;
 import cn.cloudwalk.smartframework.common.util.HttpUtil;
-import cn.cloudwalk.smartframework.common.util.JsonUtil;
-import cn.cloudwalk.smartframework.common.util.ReflectUtil;
-import cn.cloudwalk.smartframework.common.util.http.async.AsyncCallbackAdapter;
 import cn.cloudwalk.smartframework.common.util.http.async.AsyncRpcCallBack;
 import cn.cloudwalk.smartframework.common.util.http.bean.HTTP_CONTENT_TRANSFER_TYPE;
 import cn.cloudwalk.smartframework.common.util.http.bean.HttpRequest;
@@ -44,11 +41,10 @@ public final class RequestHelper {
      * @param method      目标方法
      * @param objects     方法参数
      * @param clazz       目标接口地址
-     * @param returnClazz 返回数据类型
      * @return Object Value
      * @throws Throwable Throwable
      */
-    public static Object invokeRemote(String ip, int port, Method method, Object[] objects, Class<?> clazz, Class<?> returnClazz) throws Throwable {
+    public static Object invokeRemote(String ip, int port, Method method, Object[] objects, Class<?> clazz) throws Throwable {
         NettyRpcRequest request = new NettyRpcRequest();
         request.setParameterTypes(method.getParameterTypes());
         request.setParameters(objects);
@@ -58,13 +54,7 @@ public final class RequestHelper {
             sendRequestOneWay(ip, port, requestClassName, method.getName(), request);
             return new Object();
         }
-        Class<?> returnClass;
-        if (null == returnClazz) {
-            returnClass = ReflectUtil.getClassType(returnClassName);
-        } else {
-            returnClass = returnClazz;
-        }
-        NettyRpcResponseFuture nettyRpcResponseFuture = sendRequest(ip, port, returnClass, requestClassName, method.getName(), request);
+        NettyRpcResponseFuture nettyRpcResponseFuture = sendRequest(ip, port, requestClassName, method.getName(), request);
         NettyRpcResponse response = nettyRpcResponseFuture.get();
         Exception error = response.getError();
         if (error != null) {
@@ -79,14 +69,13 @@ public final class RequestHelper {
      *
      * @param ip         目标地址
      * @param port       目标端口
-     * @param type       返回数据类型
      * @param className  目标接口地址
      * @param methodName 目标方法
      * @param request    请求实体
      * @return V
      */
     @SuppressWarnings("unchecked")
-    public static  NettyRpcResponseFuture sendRequest(String ip, int port, Class<?> type, String className, String methodName, NettyRpcRequest request) {
+    public static NettyRpcResponseFuture sendRequest(String ip, int port, String className, String methodName, NettyRpcRequest request) {
         final String requestId = buildRequestId();
         final String url = buildUrl(ip, port, className, methodName, requestId, false);
         logger.info("ready to send a request：" + url);
@@ -140,7 +129,12 @@ public final class RequestHelper {
         logger.info("ready to send an one way request：" + url);
         logger.info("one way request params：" + request);
         Map<String, byte[]> params = buildParam(request);
-        HttpUtil.Async.post(new HttpRequest(url, params, HTTP_CONTENT_TRANSFER_TYPE.JSON), new AsyncCallbackAdapter() {
+        HttpUtil.Async.postRpc(new HttpRequest(url, params, HTTP_CONTENT_TRANSFER_TYPE.JSON), new AsyncRpcCallBack() {
+            @Override
+            public void onComplete(byte[] data, HttpRequest metadata, StatusLine status) {
+
+            }
+
             @Override
             public void onError(Exception e, HttpRequest metadata) {
                 logger.error("one way request error", e);

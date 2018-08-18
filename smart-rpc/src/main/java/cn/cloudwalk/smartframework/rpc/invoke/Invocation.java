@@ -10,6 +10,13 @@ package cn.cloudwalk.smartframework.rpc.invoke;
 public interface Invocation {
 
     /**
+     * 请求类名
+     *
+     * @return 类名
+     */
+    String getClassName();
+
+    /**
      * 方法
      *
      * @return 方法名
@@ -31,10 +38,17 @@ public interface Invocation {
     Object[] getArguments();
 
     /**
-     * Invoker
+     * 目标地址ip
      *
-     * @return invoker.
+     * @return ip
      */
-    Invoker<?> getInvoker();
+    String getTargetIp();
+
+    /**
+     * 目标地址端口
+     *
+     * @return port
+     */
+    int getTargetPort();
 
 }

@@ -12,40 +12,38 @@ import java.lang.reflect.Method;
  */
 public class RpcInvocation implements Invocation, Serializable {
 
+    private String className;
+
     private String methodName;
 
     private Class<?>[] parameterTypes;
 
     private Object[] arguments;
 
-    private transient Invoker<?> invoker;
+    private String ip;
+
+    private int port;
 
     public RpcInvocation(Invocation invocation) {
-        this(invocation.getMethodName(), invocation.getParameterTypes(),
-                invocation.getArguments(), invocation.getInvoker());
+        this(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
     }
 
-    public RpcInvocation(Method method, Object[] arguments) {
-        this(method.getName(), method.getParameterTypes(), arguments, null);
+    public RpcInvocation(String ip, int port, String className, Method method, Object[] arguments) {
+        this(ip, port, className, method.getName(), method.getParameterTypes(), arguments);
     }
 
-    public RpcInvocation(String methodName, Class<?>[] parameterTypes, Object[] arguments) {
-        this(methodName, parameterTypes, arguments, null);
-    }
-
-    public RpcInvocation(String methodName, Class<?>[] parameterTypes, Object[] arguments, Invoker<?> invoker) {
+    public RpcInvocation(String ip, int port, String className, String methodName, Class<?>[] parameterTypes, Object[] arguments) {
+        this.className = className;
         this.methodName = methodName;
         this.parameterTypes = parameterTypes == null ? new Class<?>[0] : parameterTypes;
         this.arguments = arguments == null ? new Object[0] : arguments;
-        this.invoker = invoker;
+        this.ip = ip;
+        this.port = port;
     }
 
-    public void setMethodName(String methodName) {
-        this.methodName = methodName;
-    }
-
-    public void setParameterTypes(Class<?>[] parameterTypes) {
-        this.parameterTypes = parameterTypes == null ? new Class<?>[0] : parameterTypes;
+    @Override
+    public String getClassName() {
+        return className;
     }
 
     @Override
@@ -63,16 +61,14 @@ public class RpcInvocation implements Invocation, Serializable {
         return arguments;
     }
 
-    public void setArguments(Object[] arguments) {
-        this.arguments = arguments == null ? new Object[0] : arguments;
-    }
-
-    public void setInvoker(Invoker<?> invoker) {
-        this.invoker = invoker;
+    @Override
+    public String getTargetIp() {
+        return ip;
     }
 
     @Override
-    public Invoker<?> getInvoker() {
-        return invoker;
+    public int getTargetPort() {
+        return port;
     }
+
 }

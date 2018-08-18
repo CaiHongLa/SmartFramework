@@ -10,7 +10,7 @@ import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFutur
  */
 public interface AsyncInvokeProxy {
 
-   NettyRpcResponseFuture asyncCall(Class<?> type, String methodName, Object[] args);
+   NettyRpcResponseFuture asyncCall(String methodName, Object[] args);
 
    void asyncOneWayCall(String methodName, Object[] args);
 }

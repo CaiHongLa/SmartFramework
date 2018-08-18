@@ -7,7 +7,10 @@ package cn.cloudwalk.smartframework.rpc.invoke;
  * @date 18-8-17 下午6:21
  * @since 2.0.10
  */
-public class RpcResult extends AbstractResult {
+public class RpcResult implements Result {
+
+    private Object value;
+    private Throwable exception;
 
     public RpcResult(Object result) {
         this.value = result;
@@ -30,6 +33,10 @@ public class RpcResult extends AbstractResult {
     @Override
     public boolean hasException() {
         return exception != null;
+    }
+
+    public void setException(Throwable exception){
+        this.exception = exception;
     }
 
     @Override
