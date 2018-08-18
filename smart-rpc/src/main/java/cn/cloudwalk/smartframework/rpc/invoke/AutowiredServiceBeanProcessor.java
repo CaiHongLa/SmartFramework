@@ -46,7 +46,7 @@ public class AutowiredServiceBeanProcessor implements BeanPostProcessor {
                             new AutowiredServiceInvocationHandler(invoker));
                 ReflectionUtils.makeAccessible(field);
                 field.set(bean, value);
-                logger.debug("Registered autowired service : " + interfaceClass.getSimpleName() + " annotated by " + autowiredService + " on zookeeper id : " + zookeeperId);
+                logger.info("Registered autowired service : " + interfaceClass.getSimpleName() + " annotated by " + autowiredService + " on zookeeper id : " + zookeeperId);
             }
         });
         return bean;

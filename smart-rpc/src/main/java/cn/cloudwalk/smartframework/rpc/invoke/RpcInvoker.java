@@ -54,7 +54,7 @@ public class RpcInvoker<T> {
     }
 
     public RpcResult invoke(RpcInvocation invocation) {
-        logger.info("Ready to invoke remote service : " + invocation);
+        logger.info("Ready to invoke remote service : " + invocation + " , async : " + async);
         NettyRpcRequest request = new NettyRpcRequest();
         request.setParameterTypes(invocation.getParameterTypes());
         request.setParameters(invocation.getArguments());
@@ -64,7 +64,7 @@ public class RpcInvoker<T> {
             return result;
         }
         NettyRpcResponseFuture nettyRpcResponseFuture = RpcRequestHelper.sendRequest(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), request);
-        if(isAsync()){
+        if(async){
             RpcContext.getContext().setFuture(nettyRpcResponseFuture);
             return result;
         }
