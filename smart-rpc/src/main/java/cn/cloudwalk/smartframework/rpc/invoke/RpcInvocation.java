@@ -1,7 +1,8 @@
 package cn.cloudwalk.smartframework.rpc.invoke;
 
-import java.io.Serializable;
 import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * Rpc反射实体
@@ -10,7 +11,7 @@ import java.lang.reflect.Method;
  * @date 18-8-17 下午6:24
  * @since 2.0.10
  */
-public class RpcInvocation implements Invocation, Serializable {
+class RpcInvocation {
 
     private String className;
 
@@ -24,51 +25,61 @@ public class RpcInvocation implements Invocation, Serializable {
 
     private int port;
 
-    public RpcInvocation(Invocation invocation) {
-        this(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), invocation.getParameterTypes(), invocation.getArguments());
-    }
+    private boolean oneWay = false;
 
-    public RpcInvocation(String ip, int port, String className, Method method, Object[] arguments) {
-        this(ip, port, className, method.getName(), method.getParameterTypes(), arguments);
-    }
+    private static final List<String> ONE_WAY_REQUEST_LIST = Arrays.asList("void", "Void");
 
-    public RpcInvocation(String ip, int port, String className, String methodName, Class<?>[] parameterTypes, Object[] arguments) {
+    RpcInvocation(String ip, int port, String className, Method method, Object[] arguments) {
         this.className = className;
-        this.methodName = methodName;
+        this.methodName = method.getName();
+        String returnClassName = method.getReturnType().getName();
+        if (ONE_WAY_REQUEST_LIST.contains(returnClassName)) {
+            this.oneWay = true;
+        }
         this.parameterTypes = parameterTypes == null ? new Class<?>[0] : parameterTypes;
         this.arguments = arguments == null ? new Object[0] : arguments;
         this.ip = ip;
         this.port = port;
     }
 
-    @Override
-    public String getClassName() {
+    String getClassName() {
         return className;
     }
 
-    @Override
-    public String getMethodName() {
+    String getMethodName() {
         return methodName;
     }
 
-    @Override
-    public Class<?>[] getParameterTypes() {
+    boolean isOneWay() {
+        return oneWay;
+    }
+
+    Class<?>[] getParameterTypes() {
         return parameterTypes;
     }
 
-    @Override
-    public Object[] getArguments() {
+    Object[] getArguments() {
         return arguments;
     }
 
-    @Override
-    public String getTargetIp() {
+    String getTargetIp() {
         return ip;
     }
 
-    @Override
-    public int getTargetPort() {
+    int getTargetPort() {
         return port;
     }
 
+    @Override
+    public String toString() {
+        return "RpcInvocation{" +
+                "className='" + className + '\'' +
+                ", methodName='" + methodName + '\'' +
+                ", parameterTypes=" + Arrays.toString(parameterTypes) +
+                ", arguments=" + Arrays.toString(arguments) +
+                ", ip='" + ip + '\'' +
+                ", port=" + port +
+                ", oneWay=" + oneWay +
+                '}';
+    }
 }

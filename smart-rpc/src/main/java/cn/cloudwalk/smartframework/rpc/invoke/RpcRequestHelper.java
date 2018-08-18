@@ -12,8 +12,9 @@ import org.apache.http.StatusLine;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.lang.reflect.Method;
-import java.util.*;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * Rpc请求辅助类，用于发送Rpc请求以及处理请求结果
@@ -22,46 +23,12 @@ import java.util.*;
  * @date 2018/8/15
  * @since 2.0.10
  */
-public final class RequestHelper {
+public final class RpcRequestHelper {
 
-    private static final Logger logger = LogManager.getLogger(RequestHelper.class);
+    private static final Logger logger = LogManager.getLogger(RpcRequestHelper.class);
 
-    /**
-     * 单向请求列表 方法返回类型包含在列表里 即为单向请求
-     */
-    private static final List<String> ONE_WAY_REQUEST_LIST = Arrays.asList("void", "Void");
+    private RpcRequestHelper() {
 
-    private RequestHelper() {
-
-    }
-
-    /**
-     * @param ip          目标地址
-     * @param port        目标端口
-     * @param method      目标方法
-     * @param objects     方法参数
-     * @param clazz       目标接口地址
-     * @return Object Value
-     * @throws Throwable Throwable
-     */
-    public static Object invokeRemote(String ip, int port, Method method, Object[] objects, Class<?> clazz) throws Throwable {
-        NettyRpcRequest request = new NettyRpcRequest();
-        request.setParameterTypes(method.getParameterTypes());
-        request.setParameters(objects);
-        String returnClassName = method.getReturnType().getName();
-        String requestClassName = clazz.getName().replace(".", "/");
-        if (ONE_WAY_REQUEST_LIST.contains(returnClassName)) {
-            sendRequestOneWay(ip, port, requestClassName, method.getName(), request);
-            return new Object();
-        }
-        NettyRpcResponseFuture nettyRpcResponseFuture = sendRequest(ip, port, requestClassName, method.getName(), request);
-        NettyRpcResponse response = nettyRpcResponseFuture.get();
-        Exception error = response.getError();
-        if (error != null) {
-            //服务方将异常包装成FrameworkInternalSystemException，这里直接抛出给调用方，由调用方处理
-            throw error;
-        }
-        return response.getResult();
     }
 
     /**
@@ -132,7 +99,7 @@ public final class RequestHelper {
         HttpUtil.Async.postRpc(new HttpRequest(url, params, HTTP_CONTENT_TRANSFER_TYPE.JSON), new AsyncRpcCallBack() {
             @Override
             public void onComplete(byte[] data, HttpRequest metadata, StatusLine status) {
-
+                logger.info("one way request completed");
             }
 
             @Override

@@ -19,9 +19,9 @@ import java.lang.reflect.Method;
  */
 public class AutowiredServiceInvocationHandler implements InvocationHandler {
 
-    private final Invoker<?> invoker;
+    private final RpcInvoker<?> invoker;
 
-    public AutowiredServiceInvocationHandler(Invoker<?> invoker) {
+    public AutowiredServiceInvocationHandler(RpcInvoker<?> invoker) {
         this.invoker = invoker;
     }
 

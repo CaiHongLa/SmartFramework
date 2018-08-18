@@ -4,6 +4,8 @@ import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcRequest;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponse;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFuture;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * Rpc invoker
@@ -12,7 +14,9 @@ import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFutur
  * @author liyanhui(liyanhui @ cloudwalk.cn)
  * @since 2.0.10
  */
-public class RpcInvoker<T> implements Invoker<T> {
+public class RpcInvoker<T> {
+
+    private static final Logger logger = LogManager.getLogger(RpcInvoker.class);
 
     private final Class<T> type;
 
@@ -21,53 +25,36 @@ public class RpcInvoker<T> implements Invoker<T> {
     private IZookeeperService zookeeperService;
 
     public RpcInvoker(Class<T> type, String zookeeperId, IZookeeperService zookeeperService) {
-        this(type, false, false, zookeeperId, zookeeperService);
-    }
-
-    public RpcInvoker(Class<T> type, boolean async, boolean oneWay, String zookeeperId, IZookeeperService zookeeperService) {
         this.type = type;
         this.zookeeperId = zookeeperId;
         this.zookeeperService = zookeeperService;
     }
 
-    @Override
     public Class<T> getInterface() {
         return type;
     }
 
-    @Override
-    public boolean isAsync() {
-        return false;
-    }
-
-    @Override
-    public boolean isOneWay() {
-        return false;
-    }
-
-    @Override
-    public boolean isBroadcast() {
-        return false;
-    }
-
-    @Override
     public String getZookeeperId() {
         return zookeeperId;
     }
 
-    @Override
     public IZookeeperService getZookeeperService() {
         return zookeeperService;
     }
 
-    @Override
-    public Result invoke(Invocation invocation) {
+    public RpcResult invoke(RpcInvocation invocation) {
+        logger.info("Ready to invoke remote service : " + invocation);
         NettyRpcRequest request = new NettyRpcRequest();
         request.setParameterTypes(invocation.getParameterTypes());
         request.setParameters(invocation.getArguments());
-        NettyRpcResponseFuture nettyRpcResponseFuture = RequestHelper.sendRequest(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), request);
+        RpcResult result = new RpcResult(new Object());
+        if (invocation.isOneWay()) {
+            RpcRequestHelper.sendRequestOneWay(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), request);
+            return result;
+        }
+        NettyRpcResponseFuture nettyRpcResponseFuture = RpcRequestHelper.sendRequest(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), request);
         NettyRpcResponse response = nettyRpcResponseFuture.get();
-        RpcResult result = new RpcResult(response.getResult());
+        result.setValue(response.getResult());
         result.setException(response.getError());
         return result;
     }

@@ -7,7 +7,7 @@ package cn.cloudwalk.smartframework.rpc.invoke;
  * @date 18-8-17 下午6:21
  * @since 2.0.10
  */
-public class RpcResult implements Result {
+public class RpcResult {
 
     private Object value;
     private Throwable exception;
@@ -20,17 +20,14 @@ public class RpcResult implements Result {
         this.exception = exception;
     }
 
-    @Override
     public Object getValue() {
         return value;
     }
 
-    @Override
     public Throwable getException() {
         return exception;
     }
 
-    @Override
     public boolean hasException() {
         return exception != null;
     }
@@ -39,9 +36,12 @@ public class RpcResult implements Result {
         this.exception = exception;
     }
 
-    @Override
+    public void setValue(Object value){
+        this.value = value;
+    }
+
     public Object getValueIfHasException() throws Throwable {
-        if (exception != null) {
+        if (hasException()) {
             throw exception;
         }
         return value;

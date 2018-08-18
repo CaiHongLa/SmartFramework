@@ -21,7 +21,7 @@ public @interface AutowiredService {
      *
      * @return
      */
-    String value() default "";
+    String value();
 
 
     /**
