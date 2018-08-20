@@ -40,7 +40,6 @@ public class RpcResult {
         this.value = value;
     }
 
-
     public Object getValueIfHasException() throws Throwable {
         if (hasException()) {
             throw exception;

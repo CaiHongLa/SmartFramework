@@ -36,7 +36,7 @@ class RpcInvocation {
         if (ONE_WAY_REQUEST_LIST.contains(returnClassName)) {
             this.oneWay = true;
         }
-        this.parameterTypes = parameterTypes == null ? new Class<?>[0] : parameterTypes;
+        this.parameterTypes = method.getParameterTypes();
         this.arguments = arguments == null ? new Object[0] : arguments;
         this.ip = ip;
         this.port = port;
