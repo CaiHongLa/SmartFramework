@@ -5,6 +5,7 @@ import cn.cloudwalk.smartframework.common.distributed.provider.DistributedServic
 import cn.cloudwalk.smartframework.common.distributed.provider.RpcServiceProvider;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
+import cn.cloudwalk.smartframework.common.util.ReflectUtil;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -52,8 +53,19 @@ public class AutowiredServiceInvocationHandler implements InvocationHandler {
                 ip = node.getIp();
                 port = node.getPort();
                 RpcResult result = invoker.invoke(new RpcInvocation(ip, port, className, method, args));
-                if(invoker.isAsync()){
-                    return null;
+                if(invoker.isAsync()) {
+                    String returnClassName = method.getReturnType().getName();
+                    switch (returnClassName) {
+                        case "int": return 0;
+                        case "double": return 0.0;
+                        case "float": return 0f;
+                        case "short": return Short.valueOf("0");
+                        case "long": return 0L;
+                        case "boolean": return false;
+                        case "byte": return (byte) 0;
+                        case "char": return 'O';
+                        default: return null;
+                    }
                 }
                 return result.getValueIfHasException();
             } else {
