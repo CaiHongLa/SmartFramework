@@ -7,6 +7,7 @@ import cn.cloudwalk.smartframework.transport.ChannelHandlerDelegate;
 import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
+import com.lmax.disruptor.BlockingWaitStrategy;
 import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
@@ -69,7 +70,7 @@ public class ChannelDisruptorHandler implements ChannelHandlerDelegate {
                     DISRUPTOR_RING_BUFFER_SIZE,
                     factory,
                     ProducerType.SINGLE,
-                    new YieldingWaitStrategy()
+                    new BlockingWaitStrategy()
             );
             this.disruptor.setDefaultExceptionHandler(new ChannelEventExceptionHandler());
             this.disruptor.handleEventsWith(new ChannelEventHandler());

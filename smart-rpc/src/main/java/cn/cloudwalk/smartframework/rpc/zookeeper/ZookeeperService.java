@@ -192,7 +192,16 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Override
     public Integer getAvailableLocalPort() {
         if (this.localPort == null) {
-            this.localPort = ServerUtil.getTomcatPortFromXmlConfig(this.getServletContext());
+            if(zookeeperConfig.containsKey("tomcat.port")){
+                logger.info("Find tomcat.port property in application.properties, use tomcat.port instead of tomcat port from server.xml");
+                try {
+                    this.localPort = Integer.parseInt(zookeeperConfig.getProperty("tomcat.port"));
+                }catch (Exception e){
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
+                }
+            } else {
+                this.localPort = ServerUtil.getTomcatPortFromXmlConfig(this.getServletContext());
+            }
             if (this.localPort == null) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc("Unable to get the web container port, so it cannot continue."));
             }
