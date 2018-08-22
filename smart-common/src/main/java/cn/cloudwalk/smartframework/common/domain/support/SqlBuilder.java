@@ -186,4 +186,28 @@ public class SqlBuilder {
         String originalPkName = TextUtil.unFormatVariableWithLower(pkName);
         return "select count(1) from " + tableName + " where " + originalPkName + "=:" + pkName;
     }
+
+    public static String generatePageSql(String sql, long startIndex, long pageSize) {
+        String result;
+        if (startIndex >= 0 && pageSize > 0) {
+            result = sql + " limit " + startIndex + "," + pageSize;
+        } else if (startIndex > 0) {
+            result = sql + " limit " + startIndex;
+        } else {
+            result = sql;
+        }
+        return result;
+    }
+
+    public static String generateCountSql(String sql) {
+        return " select count(*) as t from ( " + sql + " ) T ";
+    }
+
+    public static String generateOrderBySql(String sql, String orderBy) {
+        if (TextUtil.isEmpty(orderBy)) {
+            return sql;
+        }
+        return sql + " order by " + orderBy;
+    }
+
 }

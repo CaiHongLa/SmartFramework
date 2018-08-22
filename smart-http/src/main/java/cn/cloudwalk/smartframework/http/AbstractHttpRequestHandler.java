@@ -118,7 +118,7 @@ public abstract class AbstractHttpRequestHandler extends ExchangeHandlerAdapter 
 
     @Override
     public void caught(Channel channel, Throwable exception) throws TransportException {
-        String message = "System Error";
+        String message = "系统异常";
         if (exception instanceof BaseException) {
             message = ((BaseException) exception).getDesc().getRespDesc();
         }
@@ -243,7 +243,7 @@ public abstract class AbstractHttpRequestHandler extends ExchangeHandlerAdapter 
     }
 
     protected void writeError(Exception e, Channel channel) throws TransportException {
-        this.writeError("400000", "System Error", channel);
+        this.writeError("400000", "系统异常", channel);
     }
 
     protected void writeResponse(String data, Channel channel) throws TransportException {

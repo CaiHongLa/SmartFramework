@@ -12,7 +12,7 @@ import java.util.Map;
  * @author LIYANHUI
  */
 public class SystemExceptionDesc extends BaseExceptionDesc {
-    private static final String DEFAULT_MESSAGE = "System Error";
+    private static final String DEFAULT_MESSAGE = "系统异常";
 
     public SystemExceptionDesc(Throwable throwable) {
         super.setThrowable(throwable);

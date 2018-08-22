@@ -34,7 +34,8 @@ public class ProtocolExceptionWrapper extends ExceptionWrapperAdapter {
         }
 
         Map<String, Object> data = new HashMap<>();
-        data.put("respCode", type == ExceptionType.SYSTEM_EXCEPTION && serializedData.get("respCode") != null ? serializedData.get("respCode") : this.DEFAULT_ERROR_CODE);
+//        data.put("respCode", type == ExceptionType.SYSTEM_EXCEPTION && serializedData.get("respCode") != null ? serializedData.get("respCode") : this.DEFAULT_ERROR_CODE);
+        data.put("respCode", serializedData.get("respCode") != null ? serializedData.get("respCode") : this.DEFAULT_ERROR_CODE);
         data.put("respDesc", serializedData.get("respDesc"));
         return data;
     }
