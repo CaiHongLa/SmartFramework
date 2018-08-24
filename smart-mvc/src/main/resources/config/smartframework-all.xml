@@ -13,7 +13,7 @@
 
     <import resource="classpath:config/core/scheduler.xml"/>
 
-    <!--<import resource="classpath:config/core/cache.xml"/>-->
+    <import resource="classpath:config/core/cache.xml"/>
 
     <import resource="classpath:config/core/other.xml"/>
 
