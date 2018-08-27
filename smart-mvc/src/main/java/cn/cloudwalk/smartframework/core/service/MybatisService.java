@@ -18,7 +18,6 @@ import java.util.List;
  * @date 18-8-27 上午11:03
  * @since 2.0.10
  */
-//@Service("mybatisService")
 public class MybatisService<Entity extends BaseDomain, Pk extends Serializable> extends MvcComponent implements IMybatisService<Entity, Pk> {
 
     @Autowired(

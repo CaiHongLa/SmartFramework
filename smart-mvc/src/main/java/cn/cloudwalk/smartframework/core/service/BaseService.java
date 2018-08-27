@@ -13,7 +13,6 @@ import java.util.List;
 /**
  * @author LIYANHUI
  */
-//@Service("baseService")
 public class BaseService<Entity extends BaseDomain, Pk extends Serializable> extends MvcComponent implements IBaseService<Entity, Pk> {
 
     @Override
