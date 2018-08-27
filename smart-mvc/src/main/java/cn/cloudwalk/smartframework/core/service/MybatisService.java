@@ -7,6 +7,7 @@ import cn.cloudwalk.smartframework.common.mvc.MvcComponent;
 import cn.cloudwalk.smartframework.common.mvc.service.IMybatisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import tk.mybatis.mapper.common.Mapper;
+import tk.mybatis.mapper.entity.Example;
 
 import java.io.Serializable;
 import java.util.List;
@@ -26,62 +27,37 @@ public class MybatisService<Entity extends BaseDomain, Pk extends Serializable> 
     protected Mapper<Entity> mapper;
 
     @Override
-    public void save(Entity entity) {
-        getMapper().insert(entity);
+    public int delete(Pk pk) {
+        return getMapper().deleteByPrimaryKey(pk);
     }
 
     @Override
-    public void delete(Entity entity) {
-        getMapper().delete(entity);
+    public int save(Entity entity) {
+        return getMapper().insert(entity);
     }
 
     @Override
-    public void deleteById(Pk pk) {
-        getMapper().deleteByPrimaryKey(pk);
-    }
-
-    @Override
-    public void deleteByIds(List<Pk> pks) {
-        for (Pk pk : pks) {
-            getMapper().deleteByPrimaryKey(pk);
-        }
-    }
-
-    @Override
-    public void deleteAll(List<Entity> entities) {
-        for (Entity entity : entities) {
-            getMapper().delete(entity);
-        }
-    }
-
-    @Override
-    public void update(Entity entity) {
-        getMapper().updateByPrimaryKey(entity);
-    }
-
-    @Override
-    public Entity getById(Pk pk) {
-        return getMapper().selectByPrimaryKey(pk);
-    }
-
-    @Override
-    public boolean isExist(Pk pk) {
-        Entity entity = getMapper().selectByPrimaryKey(pk);
-        return entity != null;
-    }
-
-    @Override
-    public List<Entity> selectByExample(Object example) {
+    public List<Entity> selectByExample(Example example) {
         return getMapper().selectByExample(example);
     }
 
     @Override
-    public void updateNotNull(Entity entity) {
-        getMapper().updateByPrimaryKeySelective(entity);
+    public Entity selectByKey(Pk pk) {
+        return getMapper().selectByPrimaryKey(pk);
     }
 
     @Override
-    public int selectCountByExample(Object example) {
+    public int updateAll(Entity entity) {
+        return getMapper().updateByPrimaryKey(entity);
+    }
+
+    @Override
+    public int updateNotNull(Entity entity) {
+        return getMapper().updateByPrimaryKeySelective(entity);
+    }
+
+    @Override
+    public int selectCountByExample(Example example) {
         return getMapper().selectCountByExample(example);
     }
 
@@ -96,8 +72,13 @@ public class MybatisService<Entity extends BaseDomain, Pk extends Serializable> 
     }
 
     @Override
-    public void updateByExampleSelective(Entity entity, Object example) {
-        getMapper().updateByExampleSelective(entity, example);
+    public int insert(Entity entity) {
+        return getMapper().insertSelective(entity);
+    }
+
+    @Override
+    public int updateByExampleSelective(Entity entity, Example example) {
+        return getMapper().updateByExampleSelective(entity, example);
     }
 
     @Override
@@ -106,8 +87,13 @@ public class MybatisService<Entity extends BaseDomain, Pk extends Serializable> 
     }
 
     @Override
-    public void deleteByExample(Object example) {
-        getMapper().deleteByExample(example);
+    public int deleteByExample(Example example) {
+        return getMapper().deleteByExample(example);
+    }
+
+    @Override
+    public int deleteByEntity(Entity entity) {
+        return getMapper().delete(entity);
     }
 
     @Override

@@ -3,6 +3,7 @@ package cn.cloudwalk.smartframework.common.mvc.service;
 import cn.cloudwalk.smartframework.common.domain.BaseDomain;
 import cn.cloudwalk.smartframework.common.mvc.IMvcComponent;
 import tk.mybatis.mapper.common.Mapper;
+import tk.mybatis.mapper.entity.Example;
 
 import java.io.Serializable;
 import java.util.List;
@@ -16,37 +17,33 @@ import java.util.List;
  */
 public interface IMybatisService<Entity extends BaseDomain, Pk extends Serializable> extends IMvcComponent {
 
-    void save(Entity entity);
+    int delete(Pk pk);
 
-    void delete(Entity entity);
+    int save(Entity entity);
 
-    void deleteById(Pk pk);
+    List<Entity> selectByExample(Example example);
 
-    void deleteByIds(List<Pk> pks);
+    Entity selectByKey(Pk pk);
 
-    void deleteAll(List<Entity> entities);
+    int updateAll(Entity entity);
 
-    void update(Entity entity);
+    int updateNotNull(Entity entity);
 
-    Entity getById(Pk pk);
-
-    boolean isExist(Pk pk);
-
-    List<Entity> selectByExample(Object example);
-
-    void updateNotNull(Entity entity);
-
-    int selectCountByExample(Object example);
+    int selectCountByExample(Example example);
 
     int selectCount(Entity entity);
 
     List<Entity> select(Entity entity);
 
-    void updateByExampleSelective(Entity entity, Object example);
+    int insert(Entity entity);
+
+    int updateByExampleSelective(Entity entity, Example example);
 
     Entity selectOne(Entity entity);
 
-    void deleteByExample(Object example);
+    int deleteByExample(Example example);
+
+    int deleteByEntity(Entity entity);
 
     Mapper<Entity> getMapper();
 
