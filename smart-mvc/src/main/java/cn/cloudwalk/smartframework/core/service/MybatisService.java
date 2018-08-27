@@ -6,7 +6,6 @@ import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalS
 import cn.cloudwalk.smartframework.common.mvc.MvcComponent;
 import cn.cloudwalk.smartframework.common.mvc.service.IMybatisService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.common.Mapper;
 
 import java.io.Serializable;
@@ -22,7 +21,9 @@ import java.util.List;
 //@Service("mybatisService")
 public class MybatisService<Entity extends BaseDomain, Pk extends Serializable> extends MvcComponent implements IMybatisService<Entity, Pk> {
 
-    @Autowired
+    @Autowired(
+            required = false
+    )
     protected Mapper<Entity> mapper;
 
     @Override
@@ -112,9 +113,10 @@ public class MybatisService<Entity extends BaseDomain, Pk extends Serializable> 
 
     @Override
     public Mapper<Entity> getMapper() {
-        if(mapper == null){
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("mapper is null"));
+        if (mapper == null) {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("mybatis service must exist default mapper"));
         }
         return mapper;
     }
+
 }

@@ -6,7 +6,6 @@ import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalS
 import cn.cloudwalk.smartframework.common.mvc.MvcComponent;
 import cn.cloudwalk.smartframework.common.mvc.dao.IBaseDao;
 import cn.cloudwalk.smartframework.common.mvc.service.IBaseService;
-import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.util.List;

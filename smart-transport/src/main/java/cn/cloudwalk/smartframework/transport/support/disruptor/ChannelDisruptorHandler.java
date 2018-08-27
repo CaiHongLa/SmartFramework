@@ -8,7 +8,6 @@ import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
 import com.lmax.disruptor.BlockingWaitStrategy;
-import com.lmax.disruptor.YieldingWaitStrategy;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.LogManager;
