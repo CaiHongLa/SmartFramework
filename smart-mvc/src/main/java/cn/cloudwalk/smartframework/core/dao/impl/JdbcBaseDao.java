@@ -33,7 +33,7 @@ import java.util.*;
 /**
  * @author LIYANHUI
  */
-@Repository("jdbcBaseDao")
+//@Repository("jdbcBaseDao")
 public class JdbcBaseDao<Entity extends BaseDomain, Pk extends Serializable> extends MvcComponent implements IJdbcBaseDao<Entity, Pk> {
 
     private static final Logger logger = LogManager.getLogger(JdbcBaseDao.class);
