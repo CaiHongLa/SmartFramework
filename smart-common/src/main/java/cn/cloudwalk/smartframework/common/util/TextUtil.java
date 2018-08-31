@@ -34,6 +34,27 @@ public class TextUtil {
         }
     }
 
+    public static String join(Object[] target, String separator) {
+        if(isEmpty(separator)){
+            return null;
+        }
+        if (target == null) {
+            return null;
+        } else {
+            StringBuilder sb = new StringBuilder();
+            if (target.length > 0) {
+                sb.append(target[0]);
+
+                for(int i = 1; i < target.length; ++i) {
+                    sb.append(separator);
+                    sb.append(target[i]);
+                }
+            }
+
+            return sb.toString();
+        }
+    }
+
     public static String getFullPinyin(String text, String splitChar) {
         return PinyinHelper.convertToPinyinString(text, splitChar, PinyinFormat.WITHOUT_TONE).toUpperCase();
     }

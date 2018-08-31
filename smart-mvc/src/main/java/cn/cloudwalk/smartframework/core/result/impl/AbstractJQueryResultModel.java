@@ -1,7 +1,6 @@
 package cn.cloudwalk.smartframework.core.result.impl;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * JQuery 组件数据model
@@ -19,13 +18,13 @@ public abstract class AbstractJQueryResultModel extends AbstractJsonResultModel 
     /**
      * 组件需要的最终数据
      */
-    List<Map<String, Object>> datas;
+    List datas;
 
     String respCode;
 
     String respDesc;
 
-    public void setDatas(List<Map<String, Object>> datas) {
+    public void setDatas(List datas) {
         this.datas = datas;
     }
 
@@ -45,7 +44,7 @@ public abstract class AbstractJQueryResultModel extends AbstractJsonResultModel 
         this.respDesc = respDesc;
     }
 
-    public List<Map<String, Object>> getDatas() {
+    public List getDatas() {
         return datas;
     }
 

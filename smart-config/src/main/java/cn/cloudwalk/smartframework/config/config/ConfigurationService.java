@@ -25,6 +25,7 @@ public class ConfigurationService extends BaseComponent implements IConfiguratio
 
     @PostConstruct
     private void initApplicationConfig() {
+        logger.info("Start with " + FRAMEWORK_BANNER);
         if (!FileUtil.isFileExistOnClasspathOrConfigDir(APPLICATION_CFG_FILE_NAME)) {
             throw new FrameworkInternalSystemException(new SystemExceptionDesc("No " + APPLICATION_CFG_FILE_NAME+ " file were found under classpath. \""));
         } else {

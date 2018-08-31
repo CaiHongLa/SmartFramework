@@ -19,21 +19,6 @@
 
     <mvc:default-servlet-handler />
 
-    <!-- 静态资源访问 -->
-    <bean class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
-        <property name="locations">
-            <list>
-                <value>classpath:application.properties</value>
-            </list>
-        </property>
-    </bean>
-    <mvc:resources location="/static/lib/" mapping="/lib/**"
-                   cache-period="31556926"/>
-    <mvc:resources location="${resource_type}${upload_path}" mapping="/upload/**"
-                   cache-period="31556926"/>
-    <mvc:resources location="/static/cloudwalk/"
-                   mapping="/cloudwalk/**" cache-period="31556926"/>
-
     <!-- 验证规范支持 -->
     <bean id="validator" class="org.springframework.validation.beanvalidation.LocalValidatorFactoryBean">
         <property name="providerClass" value="org.hibernate.validator.HibernateValidator"/>
@@ -59,11 +44,5 @@
                             use-default-filters="false">
         <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
     </context:component-scan>
-
-    <bean
-            class="org.springframework.web.servlet.view.InternalResourceViewResolver"
-            p:viewClass="org.springframework.web.servlet.view.JstlView"
-            p:prefix="/system/"
-            p:suffix=".jsp"/>
 
 </beans>
