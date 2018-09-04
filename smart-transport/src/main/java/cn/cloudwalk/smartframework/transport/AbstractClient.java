@@ -124,7 +124,7 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
             }
         } catch (Throwable e) {
             logger.error("Establish connection exception with server" + TextUtil.getStackTrace(e));
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("Establish connection exception with serve", e));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("Establish connection exception with server", e));
         } finally {
             connectLock.unlock();
         }
