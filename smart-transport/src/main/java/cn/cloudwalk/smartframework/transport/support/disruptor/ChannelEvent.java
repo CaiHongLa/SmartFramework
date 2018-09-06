@@ -1,5 +1,7 @@
 package cn.cloudwalk.smartframework.transport.support.disruptor;
 
+import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
+import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
 import cn.cloudwalk.smartframework.transport.Channel;
 import cn.cloudwalk.smartframework.transport.ChannelHandler;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
@@ -62,8 +64,10 @@ public class ChannelEvent {
     public void executeException(Throwable ex, long sequence, ChannelEvent event){
         if (ex instanceof TransportException) {
             logger.info("Connection occurred transmission exception：" + ex + ",Close to close！");
-             channel.close();
+            channel.close();
+            return;
         }
+        throw new FrameworkInternalSystemException(new SystemExceptionDesc(ex));
     }
 
     public void clear() {

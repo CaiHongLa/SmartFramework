@@ -1,4 +1,4 @@
-package cn.cloudwalk.smartframework.rpc.netty.codec;
+package cn.cloudwalk.smartframework.rpc.client.codec;
 
 import com.dyuproject.protostuff.LinkedBuffer;
 import com.dyuproject.protostuff.ProtostuffIOUtil;

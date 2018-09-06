@@ -1,4 +1,4 @@
-package cn.cloudwalk.smartframework.rpc.netty;
+package cn.cloudwalk.smartframework.rpc.client.service;
 
 import cn.cloudwalk.smartframework.common.IBaseComponent;
 import cn.cloudwalk.smartframework.transport.Server;
@@ -13,7 +13,7 @@ public interface INettyRpcService extends IBaseComponent {
 
     void start();
 
-    Server getNettyRpcServer();
+    Server getRpcServer();
 
-    Integer getHttpRpcPort();
+    Integer getRpcPort();
 }

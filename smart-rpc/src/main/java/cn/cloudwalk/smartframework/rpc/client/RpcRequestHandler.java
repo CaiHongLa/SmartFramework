@@ -1,59 +1,37 @@
-package cn.cloudwalk.smartframework.rpc.netty.http;
+package cn.cloudwalk.smartframework.rpc.client;
 
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcRequest;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponse;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
-import cn.cloudwalk.smartframework.common.util.JsonUtil;
-import cn.cloudwalk.smartframework.common.util.TextUtil;
 import cn.cloudwalk.smartframework.config.SpringContextHolder;
-import cn.cloudwalk.smartframework.rpc.netty.codec.SerializationUtil;
 import cn.cloudwalk.smartframework.transport.Channel;
 import cn.cloudwalk.smartframework.transport.exchange.support.ExchangeHandlerAdapter;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
-import com.google.common.primitives.Bytes;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.buffer.Unpooled;
-import io.netty.handler.codec.http.*;
-import io.netty.util.CharsetUtil;
 import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.util.ReflectionUtils;
 
 import java.lang.reflect.Method;
-import java.util.HashMap;
-import java.util.List;
+import java.util.Arrays;
 import java.util.Map;
 
 /**
- * 解析Http请求
+ * 解析Rpc请求
  *
  * @author LIYANHUI
- * @since 2.0.0
+ * @since 2.0.10
  */
-public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
+public class RpcRequestHandler extends ExchangeHandlerAdapter {
 
     private final Map<String, Object> handlers;
-    /**
-     * 空的返回对象
-     */
-    private static FullHttpResponse EMPTY_RESPONSE = new DefaultFullHttpResponse(
-            HttpVersion.HTTP_1_1,
-            HttpResponseStatus.OK,
-            Unpooled.EMPTY_BUFFER
-    );
 
-    static {
-        EMPTY_RESPONSE.headers().set("Content-Length", Unpooled.EMPTY_BUFFER.readableBytes());
-    }
-
-    public RpcHttpRequestHandler(Map<String, Object> handlers) {
+    public RpcRequestHandler(Map<String, Object> handlers) {
         this.handlers = handlers;
     }
 
-    private static final Logger logger = LogManager.getLogger(RpcHttpRequestHandler.class);
+    private static final Logger logger = LogManager.getLogger(RpcRequestHandler.class);
 
     @Override
     public void connected(Channel channel) throws TransportException {
@@ -73,36 +51,20 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
     @Override
     public void received(Channel channel, Object message) throws TransportException {
         try {
-            if (message instanceof HttpRequest) {
-                HttpRequest request = (HttpRequest) message;
-                String url = request.uri();
-                Map<String, Object> params = TextUtil.parseUrlParams(url);
-                final String className = url.substring(1, url.indexOf("?")).replace("/", ".");
-                final String requestId = (String) params.get("requestId");
-                final String methodName = (String) params.get("methodName");
-                final boolean oneWay = Boolean.valueOf((String) params.get("oneWay"));
-                logger.info("received request，class：" + className + "，method：" + methodName + "，id：" + requestId + "，one way：" + oneWay);
+            if (message instanceof NettyRpcRequest) {
+                NettyRpcRequest request = (NettyRpcRequest) message;
+                logger.info("received request，class：" + request.getClassName() + "，method：" + request.getMethodName() + "，id：" + request.getRequestId() + "，one way：" + request.getOneWay());
                 NettyRpcResponse response = new NettyRpcResponse();
-                response.setRequestId(requestId);
+                response.setRequestId(request.getRequestId());
 
                 //单向请求 先返回一个结果 然后处理请求
-                if (oneWay) {
+                if (request.getOneWay()) {
                     writeResponse(response, channel);
                 }
 
-                NettyRpcRequest nettyRpcRequest;
+                logger.info("request params：" + Arrays.toString(request.getParameters()));
                 try {
-                    nettyRpcRequest = this.getRequestParams(request);
-                } catch (Exception e) {
-                    String errorMessage = "Handling Rpc request parameter exception";
-                    logger.error(errorMessage, e);
-                    response.setError(new FrameworkInternalSystemException(new SystemExceptionDesc(e, errorMessage)));
-                    writeResponse(response, channel);
-                    return;
-                }
-                logger.info("request params：" + nettyRpcRequest);
-                try {
-                    Object result = handle(className, methodName, nettyRpcRequest);
+                    Object result = handle(request.getClassName(), request.getMethodName(), request);
                     response.setResult(result);
                 } catch (Exception e) {
                     //对于反射到bean的异常 认为是业务处理异常 需要将异常写回到调用方后再将异常在提供方抛出
@@ -114,14 +76,14 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
                         response.setError(new FrameworkInternalSystemException(new SystemExceptionDesc(e, errorMessage)));
                     }
                     //不是单向请求的 在这里把处理结果写回去
-                    if (!oneWay) {
+                    if (!request.getOneWay()) {
                         writeResponse(response, channel);
                     }
                     throw e;
                 }
 
                 //不是单向请求的 在这里把处理结果写回去
-                if (!oneWay) {
+                if (!request.getOneWay()) {
                     writeResponse(response, channel);
                 }
             } else {
@@ -165,30 +127,8 @@ public class RpcHttpRequestHandler extends ExchangeHandlerAdapter {
         throw new TransportException(channel, exception);
     }
 
-    @SuppressWarnings("unchecked")
-    private NettyRpcRequest getRequestParams(HttpRequest request) {
-        Map<String, Object> params = new HashMap<>();
-        FullHttpRequest fullReq;
-        String content;
-        Map<String, Object> mapParams;
-        fullReq = (FullHttpRequest) request;
-        content = fullReq.content().toString(CharsetUtil.UTF_8);
-        if (TextUtil.isNotEmpty(content)) {
-            mapParams = JsonUtil.json2Map(content);
-            params.putAll(mapParams);
-        }
-        List<Byte> data = (List) params.get("data");
-        byte[] byteData = Bytes.toArray(data);
-        return SerializationUtil.deserialize(byteData, NettyRpcRequest.class);
-    }
-
     private void writeResponse(NettyRpcResponse response, Channel channel) throws TransportException {
         logger.info("response: " + response);
-        ByteBuf byteBuf = PooledByteBufAllocator.DEFAULT.directBuffer();
-        byteBuf.writeBytes(SerializationUtil.serialize(response));
-        FullHttpResponse httpResponse = new DefaultFullHttpResponse(HttpVersion.HTTP_1_1, HttpResponseStatus.OK, byteBuf);
-        httpResponse.headers().set("Content-Type", "application/json;charset=UTF-8");
-        httpResponse.headers().set("Content-Length", byteBuf.readableBytes());
-        channel.send(httpResponse);
+        channel.send(response);
     }
 }

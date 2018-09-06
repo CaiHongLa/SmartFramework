@@ -28,6 +28,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.Closeable;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -251,9 +252,9 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
                     if (data != null && data.getData() != null && data.getData().length > 0) {
                         String dataPath = data.getPath();
                         if (dataPath.startsWith(getRpcServicePath())) {
-                            providers.add(JsonUtil.json2Object(new String(data.getData(), "UTF-8"), RpcServiceProvider.class));
+                            providers.add(JsonUtil.json2Object(new String(data.getData(), StandardCharsets.UTF_8), RpcServiceProvider.class));
                         } else if (dataPath.startsWith(getHttpServicePath())) {
-                            providers.add(JsonUtil.json2Object(new String(data.getData(), "UTF-8"), HttpServiceProvider.class));
+                            providers.add(JsonUtil.json2Object(new String(data.getData(), StandardCharsets.UTF_8), HttpServiceProvider.class));
                         } else {
                             logger.error("Nodes are neither RPC node nor HTTP node.: " + data);
                         }
@@ -377,7 +378,7 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
                     printInfo.append("├ ").append(currPath);
                     byte[] data = treeCache.getCurrentData(currNodePath).getData();
                     if (data != null && data.length > 0) {
-                        HttpServiceProvider info = JsonUtil.json2Object(new String(data, "UTF-8"), HttpServiceProvider.class);
+                        HttpServiceProvider info = JsonUtil.json2Object(new String(data, StandardCharsets.UTF_8), HttpServiceProvider.class);
                         String registerTime = DateUtil.formatDate(info.getRegisterTime(), DateUtil.DATE_PATTERN.yyyy_MM_dd_HH_mm_ss);
                         printInfo.append(" (Registered ").append(registerTime).append(")");
                     }

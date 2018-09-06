@@ -7,7 +7,7 @@ import cn.cloudwalk.smartframework.common.distributed.provider.HttpServiceProvid
 import cn.cloudwalk.smartframework.common.distributed.provider.RpcServiceProvider;
 import cn.cloudwalk.smartframework.rpc.bean.PublicHttpServiceVO;
 import cn.cloudwalk.smartframework.rpc.bean.PublicRpcServiceVO;
-import cn.cloudwalk.smartframework.rpc.netty.INettyRpcService;
+import cn.cloudwalk.smartframework.rpc.client.service.INettyRpcService;
 import cn.cloudwalk.smartframework.rpc.service.holder.IPublicServiceHolder;
 import cn.cloudwalk.smartframework.transport.Server;
 import org.apache.logging.log4j.LogManager;
@@ -64,9 +64,9 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
         if (!rpcServiceVOS.isEmpty()) {
             String rpcServiceRootPath = this.zookeeperService.getRpcServicePath();
             String rpcRootPath = rpcServiceRootPath + "/" + zookeeperId + "/";
-            Integer rpcPort = nettyRpcService.getHttpRpcPort();
+            Integer rpcPort = nettyRpcService.getRpcPort();
             String rpcProviderPath = "/provider-" + localIp + ":" + rpcPort;
-            Server server = nettyRpcService.getNettyRpcServer();
+            Server server = nettyRpcService.getRpcServer();
             if (server == null || server.isClosed()) {
                 nettyRpcService.start();
                 registerRpcService(rpcServiceVOS, rpcRootPath, rpcProviderPath, zookeeperId, localIp, rpcPort);

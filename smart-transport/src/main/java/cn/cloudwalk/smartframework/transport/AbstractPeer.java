@@ -71,6 +71,14 @@ public abstract class AbstractPeer implements EndPoint, ChannelHandler {
         return handler;
     }
 
+    @Override
+    public ChannelHandlerDelegate getChannelHandlerDelegate() {
+        if(handler instanceof ChannelHandlerDelegate){
+            return (ChannelHandlerDelegate) handler;
+        }
+        return null;
+    }
+
     boolean isClosing() {
         return closing && !closed;
     }

@@ -12,6 +12,7 @@
 
     <properties>
         <smartframework.version>2.0.10</smartframework.version>
+        <clientcomponents.version>1.0.0</clientcomponents.version>
     </properties>
     <name>smart-rpc</name>
 
@@ -26,6 +27,11 @@
             <groupId>cn.cloudwalk.smartframework</groupId>
             <artifactId>smart-config</artifactId>
             <version>${smartframework.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>cn.cloudwalk.smartframework.clientcomponents</groupId>
+            <artifactId>netty</artifactId>
+            <version>${clientcomponents.version}</version>
         </dependency>
         <!-- 序列化工具 -->
         <dependency>

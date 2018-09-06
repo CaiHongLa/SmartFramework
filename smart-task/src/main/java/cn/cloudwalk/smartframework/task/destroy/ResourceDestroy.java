@@ -2,6 +2,7 @@ package cn.cloudwalk.smartframework.task.destroy;
 
 import cn.cloudwalk.smartframework.common.BaseComponent;
 import cn.cloudwalk.smartframework.common.util.HttpUtil;
+import cn.cloudwalk.smartframework.rpc.invoke.RpcRequestHelper;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.context.ApplicationListener;
@@ -21,10 +22,11 @@ public class ResourceDestroy extends BaseComponent implements ApplicationListene
     @Override
     public void onApplicationEvent(ContextClosedEvent event) {
         if(event.getApplicationContext().getParent() == null) {
-            logger.info("Start closing the Http connection pool！");
+            logger.info("Start closing the connection pool！");
             HttpUtil.Async.closeAsyncHttpClient();
             HttpUtil.Sync.closeHttpClient();
-            logger.info("Http connection pool closed！");
+            RpcRequestHelper.closeRpcClient();
+            logger.info("connection pool closed！");
         }
     }
 }

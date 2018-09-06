@@ -179,6 +179,10 @@ public abstract class AbstractClient extends AbstractEndpoint implements Client 
         } catch (Throwable e) {
             logger.warn(e.getMessage(), e);
         }
+        ChannelHandlerDelegate handlerDelegate = getChannelHandlerDelegate();
+        if(handlerDelegate != null){
+            handlerDelegate.close();
+        }
         try {
             doClose();
         } catch (Throwable e) {

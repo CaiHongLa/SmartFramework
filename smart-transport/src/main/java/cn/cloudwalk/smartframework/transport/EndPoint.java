@@ -28,6 +28,14 @@ public interface EndPoint {
     ChannelHandler getChannelHandler();
 
     /**
+     * 获取代理Handler
+     *
+     * @return ChannelHandlerDelegate
+     * @since 2.0.10
+     */
+    ChannelHandlerDelegate getChannelHandlerDelegate();
+
+    /**
      * 获取本地地址
      *
      * @return InetSocketAddress

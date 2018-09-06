@@ -72,7 +72,7 @@ public class NettyServer extends AbstractServer implements Server {
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childHandler(new ChannelInitializer<io.netty.channel.Channel>() {
                     @Override
-                    protected void initChannel(io.netty.channel.Channel ch) throws Exception {
+                    protected void initChannel(io.netty.channel.Channel ch) {
                         NettyCodecAdapter adapter = new NettyCodecAdapter(getTransportContext(), getCodec(), NettyServer.this);
                         ChannelPipeline pipeline = ch.pipeline();
                         NettySslConfigUtil.addSslHandler(pipeline, "tcp");
@@ -88,7 +88,7 @@ public class NettyServer extends AbstractServer implements Server {
     }
 
     @Override
-    protected void doClose() throws Throwable {
+    protected void doClose() {
         try {
             if (channel != null) {
                 channel.close();

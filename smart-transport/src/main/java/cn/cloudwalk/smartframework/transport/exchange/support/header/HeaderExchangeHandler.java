@@ -9,6 +9,8 @@ import cn.cloudwalk.smartframework.transport.support.transport.TransportExceptio
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
+
 /**
  * HeaderExchangeHandler
  * <p>
@@ -108,6 +110,13 @@ public class HeaderExchangeHandler implements ChannelHandlerDelegate {
             return ((ChannelHandlerDelegate) handler).getHandler();
         } else {
             return handler;
+        }
+    }
+
+    @Override
+    public void close() {
+        if(handler != null){
+            handler.close();
         }
     }
 }

@@ -5,6 +5,7 @@ import cn.cloudwalk.smartframework.transport.ChannelHandler;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -100,4 +101,10 @@ public class ChannelHandlerDispatcher implements ChannelHandler {
         }
     }
 
+    @Override
+    public void close() {
+        for(ChannelHandler listener : channelHandlers){
+            listener.close();
+        }
+    }
 }

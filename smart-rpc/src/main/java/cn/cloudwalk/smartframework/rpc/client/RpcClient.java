@@ -1,6 +1,5 @@
-package cn.cloudwalk.smartframework.netty;
+package cn.cloudwalk.smartframework.rpc.client;
 
-import cn.cloudwalk.smartframework.common.util.NettySslConfigUtil;
 import cn.cloudwalk.smartframework.transport.AbstractClient;
 import cn.cloudwalk.smartframework.transport.ChannelHandler;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
@@ -19,32 +18,34 @@ import org.apache.logging.log4j.Logger;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Netty客户端
+ * Rpc客户端
  *
  * @author LIYANHUI
- * @since 1.0.0
+ * @since 2.0.10
  */
-public class NettyClient extends AbstractClient {
+public class RpcClient extends AbstractClient {
 
-    private static final Logger logger = LogManager.getLogger(NettyClient.class);
+    private static final Logger logger = LogManager.getLogger(RpcClient.class);
 
     private Bootstrap bootstrap;
     private volatile Channel channel;
     private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors() + 1;
 
-    public NettyClient(final TransportContext transportContext, final ChannelHandler handler) {
+    public RpcClient(final TransportContext transportContext, final ChannelHandler handler) {
         super(transportContext, AbstractClient.wrapChannelHandler(transportContext, handler));
     }
 
     @Override
-    protected void doOpen() throws Throwable {
-        final NettyClientHandler nettyClientHandler = new NettyClientHandler(getTransportContext(), this);
+    protected void doOpen() {
+        final RpcClientHandler rpcClientHandler = new RpcClientHandler(getTransportContext(), this);
         bootstrap = new Bootstrap();
         if (Epoll.isAvailable()) {
-            bootstrap.group(new EpollEventLoopGroup(AVAILABLE_PROCESSORS, new DefaultThreadFactory("NettyEpollClientWorker", true)));
+            EventLoopGroup eventLoopGroup = new EpollEventLoopGroup(AVAILABLE_PROCESSORS, new DefaultThreadFactory("RpcEpollClientWorker", true));
+            bootstrap.group(eventLoopGroup);
             bootstrap.channel(EpollSocketChannel.class);
         } else {
-            bootstrap.group(new NioEventLoopGroup(AVAILABLE_PROCESSORS, new DefaultThreadFactory("NettyNioClientWorker", true)));
+            EventLoopGroup eventLoopGroup = new NioEventLoopGroup(AVAILABLE_PROCESSORS, new DefaultThreadFactory("RpcNioClientWorker", true));
+            bootstrap.group(eventLoopGroup);
             bootstrap.channel(NioSocketChannel.class);
         }
         bootstrap.option(ChannelOption.SO_KEEPALIVE, true)
@@ -59,13 +60,12 @@ public class NettyClient extends AbstractClient {
 
         bootstrap.handler(new ChannelInitializer<Channel>() {
             @Override
-            protected void initChannel(Channel ch) throws Exception {
-                NettyCodecAdapter adapter = new NettyCodecAdapter(getTransportContext(), getCodec(), NettyClient.this);
+            protected void initChannel(Channel ch) {
+                RpcCodecAdapter adapter = new RpcCodecAdapter(getTransportContext(), getCodec(), RpcClient.this);
                 ChannelPipeline pipeline = ch.pipeline();
-                NettySslConfigUtil.addNettyClientSslHandler(pipeline);
                 pipeline.addLast("decoder", adapter.getDecoder())
                         .addLast("encoder", adapter.getEncoder())
-                        .addLast("handler", nettyClientHandler);
+                        .addLast("handler", rpcClientHandler);
             }
         });
     }
@@ -79,7 +79,7 @@ public class NettyClient extends AbstractClient {
             if (ret && future.isSuccess()) {
                 Channel newChannel = future.channel();
                 try {
-                    Channel oldChannel = NettyClient.this.channel;
+                    Channel oldChannel = RpcClient.this.channel;
                     if (oldChannel != null) {
                         try {
                             if (logger.isInfoEnabled()) {
@@ -87,20 +87,20 @@ public class NettyClient extends AbstractClient {
                             }
                             oldChannel.close();
                         } finally {
-                            NettyChannel.removeChannelIfDisconnected(oldChannel);
+                            RpcChannel.removeChannelIfDisconnected(oldChannel);
                         }
                     }
                 } finally {
-                    if (NettyClient.this.isClosed()) {
+                    if (RpcClient.this.isClosed()) {
                         try {
                             logger.warn("close new channel： " + newChannel + ", because client is closed！");
                             newChannel.close();
                         } finally {
-                            NettyClient.this.channel = null;
-                            NettyChannel.removeChannelIfDisconnected(newChannel);
+                            RpcClient.this.channel = null;
+                            RpcChannel.removeChannelIfDisconnected(newChannel);
                         }
                     } else {
-                        NettyClient.this.channel = newChannel;
+                        RpcClient.this.channel = newChannel;
                     }
                 }
             } else if (future.cause() != null) {
@@ -112,20 +112,20 @@ public class NettyClient extends AbstractClient {
     }
 
     @Override
-    protected void doDisConnect() throws Throwable {
+    protected void doDisConnect() {
         try {
-            NettyChannel.removeChannelIfDisconnected(channel);
+            RpcChannel.removeChannelIfDisconnected(channel);
         } catch (Throwable t) {
             logger.warn(t.getMessage());
         }
     }
 
     @Override
-    protected void doClose() throws Throwable {
-        //不能关闭nioEventLoopGroup，会导致建立连接的时候发生Reject异常，Event Loop Shut Down？
-//        if (nioEventLoopGroup != null) {
-//            nioEventLoopGroup.shutdownGracefully();
-//        }
+    protected void doClose() {
+        if (bootstrap != null) {
+            bootstrap.config().group().shutdownGracefully(1, 10, TimeUnit.SECONDS);
+        }
+
     }
 
     @Override
@@ -134,6 +134,6 @@ public class NettyClient extends AbstractClient {
         if (c == null || !c.isActive()) {
             return null;
         }
-        return NettyChannel.getOrAddChannel(getTransportContext(), c, this);
+        return RpcChannel.getOrAddChannel(getTransportContext(), c, this);
     }
 }

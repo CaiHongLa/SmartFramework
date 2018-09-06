@@ -4,6 +4,8 @@ import cn.cloudwalk.smartframework.transport.Channel;
 import cn.cloudwalk.smartframework.transport.ChannelHandler;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
 
+import java.io.IOException;
+
 /**
  * Handler适配器
  *
@@ -32,4 +34,8 @@ public class ChannelHandlerAdapter implements ChannelHandler {
     public void caught(Channel channel, Throwable exception) throws TransportException {
     }
 
+    @Override
+    public void close() {
+
+    }
 }

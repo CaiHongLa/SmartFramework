@@ -20,5 +20,10 @@
             <artifactId>smart-common</artifactId>
             <version>${smartframework.version}</version>
         </dependency>
+        <dependency>
+            <groupId>cn.cloudwalk.smartframework</groupId>
+            <artifactId>smart-rpc</artifactId>
+            <version>${smartframework.version}</version>
+        </dependency>
     </dependencies>
 </project>

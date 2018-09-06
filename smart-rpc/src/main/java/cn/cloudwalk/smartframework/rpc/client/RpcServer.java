@@ -1,11 +1,12 @@
-package cn.cloudwalk.smartframework.rpc.netty.http;
+package cn.cloudwalk.smartframework.rpc.client;
 
+import cn.cloudwalk.smartframework.common.util.NettySslConfigUtil;
 import cn.cloudwalk.smartframework.transport.AbstractServer;
 import cn.cloudwalk.smartframework.transport.Channel;
 import cn.cloudwalk.smartframework.transport.ChannelHandler;
 import cn.cloudwalk.smartframework.transport.Server;
+import cn.cloudwalk.smartframework.transport.support.ChannelHandlers;
 import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
-import cn.cloudwalk.smartframework.transport.support.disruptor.ChannelDisruptorHandler;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
 import io.netty.bootstrap.ServerBootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
@@ -15,10 +16,6 @@ import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpContentCompressor;
-import io.netty.handler.codec.http.HttpObjectAggregator;
-import io.netty.handler.codec.http.HttpRequestDecoder;
-import io.netty.handler.codec.http.HttpResponseEncoder;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -29,45 +26,43 @@ import java.util.HashSet;
 import java.util.Map;
 
 /**
- * Http 服务
+ * RpcServer
  *
  * @author LIYANHUI
- * @date 2018/1/31
- * @since 1.0.0
+ * @since 2.0.10
  */
-public class RpcHttpServer extends AbstractServer implements Server {
+public class RpcServer extends AbstractServer implements Server {
 
-    private static final Logger logger = LogManager.getLogger(RpcHttpServer.class);
+    private static final Logger logger = LogManager.getLogger(RpcServer.class);
+    private Map<String, Channel> channels;
     private ServerBootstrap bootstrap;
     private io.netty.channel.Channel channel;
     private EventLoopGroup bossGroup;
     private EventLoopGroup workerGroup;
-    private Map<String, Channel> channels;
     private static final int AVAILABLE_PROCESSORS = Runtime.getRuntime().availableProcessors() + 1;
 
-    public RpcHttpServer(TransportContext transportContext, ChannelHandler handler) {
-        super(transportContext, new ChannelDisruptorHandler(transportContext, handler));
+    public RpcServer(TransportContext transportContext, ChannelHandler handler) {
+        super(transportContext, ChannelHandlers.wrapServer(transportContext, handler));
     }
 
     @Override
     protected void doOpen() {
         bootstrap = new ServerBootstrap();
         if (Epoll.isAvailable()) {
-            bossGroup = new EpollEventLoopGroup(getTransportContext().getParameter(ProtocolConstants.RPC_HTTP_SERVER_BOSS_THREAD_SIZE, AVAILABLE_PROCESSORS),
-                    new DefaultThreadFactory("RpcHttpEpollServerBoss", true));
-            workerGroup = new EpollEventLoopGroup(getTransportContext().getParameter(ProtocolConstants.RPC_HTTP_SERVER_WORKER_THREAD_SIZE, AVAILABLE_PROCESSORS),
-                    new DefaultThreadFactory("RpcHttpEpollServerWorker", true));
+            bossGroup = new EpollEventLoopGroup(getTransportContext().getParameter(ProtocolConstants.RPC_SERVER_BOSS_THREAD_SIZE, AVAILABLE_PROCESSORS),
+                    new DefaultThreadFactory("RpcEpollServerBoss", true));
+            workerGroup = new EpollEventLoopGroup(getTransportContext().getParameter(ProtocolConstants.RPC_SERVER_WORKER_THREAD_SIZE, AVAILABLE_PROCESSORS),
+                    new DefaultThreadFactory("RpcEpollServerWorker", true));
             bootstrap.channel(EpollServerSocketChannel.class);
         } else {
-            bossGroup = new NioEventLoopGroup(getTransportContext().getParameter(ProtocolConstants.RPC_HTTP_SERVER_BOSS_THREAD_SIZE, AVAILABLE_PROCESSORS),
-                    new DefaultThreadFactory("RpcHttpNioServerBoss", true));
-            workerGroup = new NioEventLoopGroup(getTransportContext().getParameter(ProtocolConstants.RPC_HTTP_SERVER_WORKER_THREAD_SIZE, AVAILABLE_PROCESSORS),
-                    new DefaultThreadFactory("RpcHttpNioServerWorker", true));
+            bossGroup = new NioEventLoopGroup(getTransportContext().getParameter(ProtocolConstants.RPC_SERVER_BOSS_THREAD_SIZE, AVAILABLE_PROCESSORS),
+                    new DefaultThreadFactory("RpcNioServerBoss", true));
+            workerGroup = new NioEventLoopGroup(getTransportContext().getParameter(ProtocolConstants.RPC_SERVER_WORKER_THREAD_SIZE, AVAILABLE_PROCESSORS),
+                    new DefaultThreadFactory("RpcNioServerWorker", true));
             bootstrap.channel(NioServerSocketChannel.class);
         }
-
-        final RpcHttpServerHandler rpcHttpServerHandler = new RpcHttpServerHandler(getTransportContext(), this);
-        channels = rpcHttpServerHandler.getChannels();
+        final RpcServerHandler rpcServerHandler = new RpcServerHandler(getTransportContext(), this);
+        channels = rpcServerHandler.getChannels();
         bootstrap.group(bossGroup, workerGroup)
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .option(ChannelOption.TCP_NODELAY, true)
@@ -77,13 +72,13 @@ public class RpcHttpServer extends AbstractServer implements Server {
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childHandler(new ChannelInitializer<io.netty.channel.Channel>() {
                     @Override
-                    protected void initChannel(io.netty.channel.Channel ch) throws Exception {
+                    protected void initChannel(io.netty.channel.Channel ch) {
+                        RpcCodecAdapter adapter = new RpcCodecAdapter(getTransportContext(), getCodec(), RpcServer.this);
                         ChannelPipeline pipeline = ch.pipeline();
-                        pipeline.addLast("decoder", new HttpRequestDecoder())
-                                .addLast("encoder", new HttpResponseEncoder())
-                                .addLast("defeater", new HttpContentCompressor())
-                                .addLast("aggregator", new HttpObjectAggregator(1048576))
-                                .addLast("handler", rpcHttpServerHandler);
+                        NettySslConfigUtil.addSslHandler(pipeline, "tcp");
+                        pipeline.addLast("decoder", adapter.getDecoder())
+                                .addLast("encoder", adapter.getEncoder())
+                                .addLast("handler", rpcServerHandler);
                     }
                 });
 

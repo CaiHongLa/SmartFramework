@@ -53,4 +53,11 @@ public interface ChannelHandler {
      */
     void caught(Channel channel, Throwable throwable) throws TransportException;
 
+    /**
+     * 关闭handler中的资源
+     *
+     * @since 2.0.10
+     */
+    void close();
+
 }

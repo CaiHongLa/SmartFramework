@@ -21,10 +21,4 @@ public interface ThreadPool {
      */
     Executor newExecutor(TransportContext transportContext);
 
-    /**
-     * 获取创建的线程池
-     *
-     * @return newExecutor产生的线程池
-     */
-    Executor getExecutor();
 }

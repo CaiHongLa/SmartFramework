@@ -174,13 +174,8 @@ public class HttpChannel extends AbstractChannel {
         }
         HttpChannel other = (HttpChannel) obj;
         if (channel == null) {
-            if (other.channel != null) {
-                return false;
-            }
-        } else if (!channel.equals(other.channel)) {
-            return false;
-        }
-        return true;
+            return other.channel == null;
+        } else return channel.equals(other.channel);
     }
 
     @Override

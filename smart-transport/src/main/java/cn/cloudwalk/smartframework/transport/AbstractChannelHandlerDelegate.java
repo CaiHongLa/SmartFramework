@@ -48,4 +48,11 @@ public abstract class AbstractChannelHandlerDelegate implements ChannelHandlerDe
     public void caught(Channel channel, Throwable exception) throws TransportException {
         handler.caught(channel, exception);
     }
+
+    @Override
+    public void close() {
+        if(handler != null){
+            handler.close();
+        }
+    }
 }

@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -53,7 +54,7 @@ public class XmlUtil {
         BufferedReader xmlFileReader = null;
 
         try {
-            xmlFileReader = new BufferedReader(new InputStreamReader(new FileInputStream(xmlFile), "utf-8"));
+            xmlFileReader = new BufferedReader(new InputStreamReader(new FileInputStream(xmlFile), StandardCharsets.UTF_8));
             StringBuilder xmlStringBuilder = new StringBuilder();
             String xmlLine;
 

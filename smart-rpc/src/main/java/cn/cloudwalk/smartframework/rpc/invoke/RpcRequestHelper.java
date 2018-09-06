@@ -1,20 +1,26 @@
 package cn.cloudwalk.smartframework.rpc.invoke;
 
-import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcRequest;
-import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponse;
-import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFuture;
-import cn.cloudwalk.smartframework.common.util.HttpUtil;
-import cn.cloudwalk.smartframework.common.util.http.async.AsyncRpcCallBack;
-import cn.cloudwalk.smartframework.common.util.http.bean.HTTP_CONTENT_TRANSFER_TYPE;
-import cn.cloudwalk.smartframework.common.util.http.bean.HttpRequest;
-import cn.cloudwalk.smartframework.rpc.netty.codec.SerializationUtil;
-import org.apache.http.StatusLine;
+import cn.cloudwalk.smartframework.clientcomponents.client.CloseableClient;
+import cn.cloudwalk.smartframework.clientcomponents.client.conn.PoolingTcpClientConnectionManager;
+import cn.cloudwalk.smartframework.clientcomponents.client.pool.CPool;
+import cn.cloudwalk.smartframework.clientcomponents.core.config.RequestConfig;
+import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
+import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
+import cn.cloudwalk.smartframework.common.util.PropertiesUtil;
+import cn.cloudwalk.smartframework.rpc.client.RpcClientBuilder;
+import cn.cloudwalk.smartframework.rpc.client.RpcClientConnectionOperator;
+import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.UUID;
+import java.util.Properties;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Rpc请求辅助类，用于发送Rpc请求以及处理请求结果
@@ -23,105 +29,113 @@ import java.util.UUID;
  * @date 2018/8/15
  * @since 2.0.10
  */
-final class RpcRequestHelper {
+public final class RpcRequestHelper {
 
     private static final Logger logger = LogManager.getLogger(RpcRequestHelper.class);
+
+    private static ConcurrentMap<Integer, CloseableClient> clients;
+    private static Map<String, String> params;
+
+    static {
+        Properties config = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir("application.properties");
+        if (config != null) {
+            params = new HashMap<>(config.size());
+            for (Object key : config.keySet()) {
+                params.put((String) key, (String) config.get(key));
+            }
+        }
+    }
 
     private RpcRequestHelper() {
 
     }
 
     /**
-     * 发送请求
-     *
-     * @param ip         目标地址
-     * @param port       目标端口
-     * @param className  目标接口地址
-     * @param methodName 目标方法
-     * @param request    请求实体
-     * @return V
+     * @param key
+     * @param defaultValue
+     * @return
+     * @since 2.0.10
      */
-    @SuppressWarnings("unchecked")
-    static NettyRpcResponseFuture sendRequest(String ip, int port, String className, String methodName, NettyRpcRequest request) {
-        final String requestId = buildRequestId();
-        final String url = buildUrl(ip, port, className, methodName, requestId, false);
-        logger.info("ready to send a request：" + url);
-        logger.info("request params：" + request);
-        NettyRpcResponseFuture nettyRpcResponseFuture = new NettyRpcResponseFuture(requestId, className, methodName);
-        FutureSet.futureMap.put(requestId, nettyRpcResponseFuture);
-        Map<String, byte[]> params = buildParam(request);
-        HttpUtil.Async.postRpc(new HttpRequest(url, params, HTTP_CONTENT_TRANSFER_TYPE.JSON), new AsyncRpcCallBack() {
-
-            @Override
-            public void onError(Exception e, HttpRequest metadata) {
-                logger.error("request error", e);
-                NettyRpcResponseFuture future = FutureSet.futureMap.get(requestId);
-                if (future != null) {
-                    FutureSet.futureMap.remove(requestId);
-                    NettyRpcResponse response = new NettyRpcResponse();
-                    response.setRequestId(requestId);
-                    response.setError(e);
-                    future.done(response);
-                }
-            }
-
-            @Override
-            @SuppressWarnings("unchecked")
-            public void onComplete(byte[] data, HttpRequest metadata, StatusLine status) {
-                NettyRpcResponse response = SerializationUtil.deserialize(data, NettyRpcResponse.class);
-                logger.info("request result：" + response);
-                String requestId = response.getRequestId();
-                NettyRpcResponseFuture future = FutureSet.futureMap.get(requestId);
-                if (future != null) {
-                    FutureSet.futureMap.remove(requestId);
-                    future.done(response);
-                }
-            }
-        });
-        return nettyRpcResponseFuture;
+    public static int getIntParam(String key, int defaultValue) {
+        if (params != null && params.containsKey(key)) {
+            return Integer.parseInt(params.get(key) + "");
+        } else {
+            logger.info("not found " + key + "，will use default value " + defaultValue);
+            return defaultValue;
+        }
     }
 
     /**
-     * 发送单向请求 不处理返回结果
-     *
-     * @param ip         目标地址
-     * @param port       目标端口
-     * @param className  目标接口地址
-     * @param methodName 目标方法
-     * @param request    请求实体
+     * @param host
+     * @return
+     * @since 2.0.10
      */
-    static void sendRequestOneWay(String ip, int port, String className, String methodName, NettyRpcRequest request) {
-        final String requestId = buildRequestId();
-        final String url = buildUrl(ip, port, className, methodName, requestId, true);
-        logger.info("ready to send an one way request：" + url);
-        logger.info("one way request params：" + request);
-        Map<String, byte[]> params = buildParam(request);
-        HttpUtil.Async.postRpc(new HttpRequest(url, params, HTTP_CONTENT_TRANSFER_TYPE.JSON), new AsyncRpcCallBack() {
-            @Override
-            public void onComplete(byte[] data, HttpRequest metadata, StatusLine status) {
-                logger.info("one way request completed");
+    static synchronized CloseableClient getOrCreateClient(InetSocketAddress host) {
+        Integer cacheKey = ("SYNC_RPC_" + host.getHostName() + "_" + host.getPort()).hashCode();
+        if (clients == null) {
+            clients = new ConcurrentHashMap<>();
+        }
+
+        if (clients.containsKey(cacheKey)) {
+            return clients.get(cacheKey);
+        } else {
+            logger.info("init CloseableClient");
+            RequestConfig requestConfig = RequestConfig.custom()
+                    .setMaxPerRoute(getIntParam(ProtocolConstants.RPC_CLIENT_MAX_PER_ROUTE, 5000))
+                    .setMaxTimeToLive(getIntParam(ProtocolConstants.RPC_CLIENT_MAX_TIME_LIVE, 60000))
+                    .setMaxTotal(getIntParam(ProtocolConstants.RPC_CLIENT_MAX_TOTOL, 5000))
+                    .setParams(params)
+                    .build();
+            PoolingTcpClientConnectionManager connManager = createConnectionManager(requestConfig);
+            CloseableClient closeableClient = RpcClientBuilder.create()
+                    .setConnectionManager(connManager)
+                    .setDefaultRequestConfig(requestConfig)
+                    .setMaxIdleTime(getIntParam(ProtocolConstants.RPC_CLIENT_MAX_IDLE_TIME, 60), TimeUnit.SECONDS)
+                    .build();
+            clients.put(cacheKey, closeableClient);
+            logger.info("CloseableClient init completed");
+            return closeableClient;
+        }
+    }
+
+    /**
+     * @since 2.0.10
+     */
+    public static void closeRpcClient() {
+        try {
+            if (clients != null && clients.size() > 0) {
+                logger.info("closing clients");
+
+                for (CloseableClient client : clients.values()) {
+                    client.close();
+                }
+
+                logger.info("clients closed");
             }
 
-            @Override
-            public void onError(Exception e, HttpRequest metadata) {
-                logger.error("one way request error", e);
-            }
-        });
+        } catch (Exception e) {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
+        }
     }
 
-    private static String buildUrl(String ip, int port, String className, String methodName, String requestId, boolean oneWay) {
-        return "http://" + ip + ":" + port + "/" + className + "?requestId=" + requestId + "&methodName=" + methodName + "&oneWay=" + oneWay;
-    }
-
-    private static String buildRequestId() {
-        return UUID.randomUUID().toString();
-    }
-
-    private static Map<String, byte[]> buildParam(NettyRpcRequest request) {
-        byte[] data = SerializationUtil.serialize(request);
-        Map<String, byte[]> params = new HashMap<>();
-        params.put("data", data);
-        return params;
+    /**
+     * @param requestConfig
+     * @return
+     * @since 2.0.10
+     */
+    private static PoolingTcpClientConnectionManager createConnectionManager(RequestConfig requestConfig) {
+        logger.info("init PoolingTcpClientConnectionManager");
+        PoolingTcpClientConnectionManager connManager = new PoolingTcpClientConnectionManager(
+                new AtomicBoolean(false),
+                new RpcClientConnectionOperator(),
+                new CPool(new PoolingTcpClientConnectionManager.InternalConnectionFactory(),
+                        requestConfig.getMaxPerRoute(),
+                        requestConfig.getMaxTotal(),
+                        requestConfig.getMaxTimeToLive(),
+                        TimeUnit.MILLISECONDS),
+                new PoolingTcpClientConnectionManager.ConfigData());
+        logger.info("PoolingTcpClientConnectionManager init completed");
+        return connManager;
     }
 
 }

@@ -10,5 +10,4 @@ import cn.cloudwalk.smartframework.transport.support.ChannelHandlerAdapter;
  * @since 1.0.0
  */
 public abstract class ExchangeHandlerAdapter extends ChannelHandlerAdapter implements ExchangeHandler{
-
 }

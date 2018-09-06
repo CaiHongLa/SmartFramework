@@ -1,11 +1,19 @@
 package cn.cloudwalk.smartframework.rpc.invoke;
 
+import cn.cloudwalk.smartframework.clientcomponents.client.CloseableClient;
+import cn.cloudwalk.smartframework.clientcomponents.client.TcpRoute;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcRequest;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponse;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFuture;
+import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
+import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.io.IOException;
+import java.net.InetSocketAddress;
+import java.util.UUID;
 
 /**
  * Rpc invoker
@@ -58,19 +66,29 @@ public class RpcInvoker<T> {
         NettyRpcRequest request = new NettyRpcRequest();
         request.setParameterTypes(invocation.getParameterTypes());
         request.setParameters(invocation.getArguments());
+        request.setClassName(invocation.getClassName());
+        request.setMethodName(invocation.getMethodName());
+        request.setOneWay(invocation.isOneWay());
+        request.setRequestId(UUID.randomUUID().toString());
         RpcResult result = new RpcResult(new Object());
-        if (invocation.isOneWay()) {
-            RpcRequestHelper.sendRequestOneWay(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), request);
+        InetSocketAddress host = new InetSocketAddress(invocation.getTargetIp(), invocation.getTargetPort());
+        CloseableClient closeableClient = RpcRequestHelper.getOrCreateClient(host);
+        try {
+            NettyRpcResponseFuture responseFuture = (NettyRpcResponseFuture) closeableClient.execute(new TcpRoute(host, host), request);
+            if(invocation.isOneWay()) {
+                return result;
+            }
+            if(async) {
+                RpcContext.getContext().setFuture(responseFuture);
+                return result;
+            }
+            NettyRpcResponse response = responseFuture.get();
+            result.setValue(response.getResult());
+            result.setException(response.getError());
             return result;
+        } catch (IOException e) {
+            logger.error("Error while do rpc invoke", e);
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
         }
-        NettyRpcResponseFuture nettyRpcResponseFuture = RpcRequestHelper.sendRequest(invocation.getTargetIp(), invocation.getTargetPort(), invocation.getClassName(), invocation.getMethodName(), request);
-        if(async){
-            RpcContext.getContext().setFuture(nettyRpcResponseFuture);
-            return result;
-        }
-        NettyRpcResponse response = nettyRpcResponseFuture.get();
-        result.setValue(response.getResult());
-        result.setException(response.getError());
-        return result;
     }
 }

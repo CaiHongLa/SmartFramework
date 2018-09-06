@@ -10,6 +10,7 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -44,10 +45,14 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
         executor = (ExecutorService) transportContext.getThreadPool().newExecutor(transportContext);
     }
 
+    @Override
     public void close() {
         try {
             if (executor != null) {
                 executor.shutdown();
+            }
+            if(handler != null){
+                handler.close();
             }
         } catch (Throwable t) {
             logger.warn("Failed to close thread pool: " + t.getMessage(), t);

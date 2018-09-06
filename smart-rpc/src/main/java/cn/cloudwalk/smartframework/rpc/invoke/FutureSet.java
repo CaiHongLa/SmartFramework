@@ -14,8 +14,8 @@ import java.util.concurrent.ConcurrentHashMap;
  * @see NettyRpcResponseFuture
  * @since 1.0.0
  */
-class FutureSet {
+public class FutureSet {
 
-    static Map<String, NettyRpcResponseFuture> futureMap = new ConcurrentHashMap<>();
+   public static Map<String, NettyRpcResponseFuture> futureMap = new ConcurrentHashMap<>();
 
 }

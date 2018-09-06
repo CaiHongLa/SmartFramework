@@ -78,7 +78,7 @@ public class HttpServer extends AbstractServer implements Server {
                 .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childHandler(new ChannelInitializer<io.netty.channel.Channel>() {
                     @Override
-                    protected void initChannel(io.netty.channel.Channel ch) throws Exception {
+                    protected void initChannel(io.netty.channel.Channel ch) {
                         ChannelPipeline pipeline = ch.pipeline();
                         NettySslConfigUtil.addSslHandler(pipeline, "http");
                         pipeline.addLast("decoder", new HttpRequestDecoder())
@@ -95,7 +95,7 @@ public class HttpServer extends AbstractServer implements Server {
     }
 
     @Override
-    protected void doClose() throws Throwable {
+    protected void doClose() {
         try {
             if (channel != null) {
                 channel.close();

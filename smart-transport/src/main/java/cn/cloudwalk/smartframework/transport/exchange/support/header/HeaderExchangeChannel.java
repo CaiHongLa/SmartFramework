@@ -2,6 +2,7 @@ package cn.cloudwalk.smartframework.transport.exchange.support.header;
 
 import cn.cloudwalk.smartframework.transport.Channel;
 import cn.cloudwalk.smartframework.transport.ChannelHandler;
+import cn.cloudwalk.smartframework.transport.ChannelHandlerDelegate;
 import cn.cloudwalk.smartframework.transport.exchange.ExchangeChannel;
 import cn.cloudwalk.smartframework.transport.exchange.ExchangeHandler;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
@@ -121,6 +122,11 @@ final class HeaderExchangeChannel implements ExchangeChannel {
     @Override
     public ExchangeHandler getExchangeHandler() {
         return (ExchangeHandler) channel.getChannelHandler();
+    }
+
+    @Override
+    public ChannelHandlerDelegate getChannelHandlerDelegate() {
+        return channel.getChannelHandlerDelegate();
     }
 
     @Override

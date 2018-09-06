@@ -16,7 +16,7 @@ public abstract class BackgroundTask<V> implements IBackgroundTask<V> {
     }
 
     @Override
-    public V call() throws Exception {
+    public V call() {
         try {
             return this.execute();
         } catch (Exception e) {

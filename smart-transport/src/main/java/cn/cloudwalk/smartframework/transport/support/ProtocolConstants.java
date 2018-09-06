@@ -64,16 +64,6 @@ public interface ProtocolConstants {
     String NETTY_SERVER_PORT = "netty.server.port";
 
     /**
-     * Netty客户端建立连接时的等待服务器响应时间
-     */
-    String NETTY_CLIENT_CONNECT_TIMEOUT = "netty.client.connect.timeout";
-
-    /**
-     * Netty客户端建立连接时可用时间，超过这个时间没有建立连接，会断开连接
-     */
-    String NETTY_CLIENT_CONNECT_TIME = "netty.client.connect.time";
-
-    /**
      * Netty服务器可以接受的最大连接数
      */
     String NETTY_SERVER_ACCEPTS = "netty.server.accepts.size";
@@ -114,46 +104,76 @@ public interface ProtocolConstants {
     String NETTY_DISRUPTOR_SWITCH = "netty.disruptor";
 
 
-    //******************Http Rpc Server *********************
+    //****************** Rpc Server *********************
     /**
-     * Rpc Http服务绑定端口
+     * Rpc 服务绑定端口
      */
-    String RPC_HTTP_SERVER_PORT = "rpc.http.server.port";
+    String RPC_SERVER_PORT = "rpc.server.port";
 
     /**
-     * Rpc Http服务器可以接受的最大连接数
+     * Rpc 服务器可以接受的最大连接数
      */
-    String RPC_HTTP_SERVER_ACCEPTS = "rpc.http.server.accepts.size";
+    String RPC_SERVER_ACCEPTS_SIZE = "rpc.server.accepts.size";
 
     /**
-     * Rpc Http服务器Boss线程数
+     * Rpc 服务器Boss线程数
      */
-    String RPC_HTTP_SERVER_BOSS_THREAD_SIZE = "rpc.http.server.boss.thread.size";
+    String RPC_SERVER_BOSS_THREAD_SIZE = "rpc.server.boss.thread.size";
 
     /**
-     * Rpc Http服务器Worker线程数
+     * Rpc 服务器Worker线程数
      */
-    String RPC_HTTP_SERVER_WORKER_THREAD_SIZE = "rpc.http.server.worker.thread.size";
+    String RPC_SERVER_WORKER_THREAD_SIZE = "rpc.server.worker.thread.size";
 
     /**
-     * Rpc  Http FixThreadPool核心线程数
+     * Rpc FixThreadPool核心线程数
      */
-    String RPC_HTTP_FIXED_THREAD_POOL_CORE_SIZE = "rpc.http.fixed.thread.core.size";
+    String RPC_FIXED_THREAD_CORE_SIZE = "rpc.fixed.thread.core.size";
 
     /**
-     * Rpc Http FixThreadPool线程队列数
+     * Rpc FixThreadPool线程队列数
      */
-    String RPC_HTTP_FIXED_THREAD_POOL_QUEUE_SIZE = "rpc.http.fixed.thread.queue.size";
+    String RPC_FIXED_THREAD_QUEUE_SIZE = "rpc.fixed.thread.queue.size";
 
     /**
-     * Rpc Http数据交换层心跳间隔
+     * Rpc 数据交换层心跳间隔
      */
-    String RPC_HTTP_EXCHANGE_HEART_BEAT_TIME = "rpc.http.exchange.heartbeat.time";
+    String RPC_EXCHANGE_HEARTBEAT_TIME = "rpc.exchange.heartbeat.time";
 
     /**
-     * Rpc Http数据交换层心跳超时事件
+     * Rpc 数据交换层心跳超时事件
      */
-    String RPC_HTTP_EXCHANGE_HEART_BEAT_TIMEOUT = "rpc.http.exchange.heartbeat.timeout";
+    String RPC_EXCHANGE_HEARTBEAT_TIMEOUT = "rpc.exchange.heartbeat.timeout";
+
+    /**
+     * Rpc 客户端建立连接时的等待服务器响应时间
+     */
+    String RPC_CLIENT_CONNECT_TIMEOUT = "rpc.client.connect.timeout";
+
+    /**
+     * Rpc 客户端建立连接时可用时间，超过这个时间没有建立连接，会断开连接
+     */
+    String RPC_CLIENT_CONNECT_TIME = "rpc.client.connect.time";
+
+    /**
+     * Rpc 客户端最大连接数
+     */
+    String RPC_CLIENT_MAX_TOTOL = "rpc.client.maxTotal";
+
+    /**
+     * Rpc 客户端每个路由最大连接
+     */
+    String RPC_CLIENT_MAX_PER_ROUTE = "rpc.client.maxPerRoute";
+
+    /**
+     * Rpc 客户端连接最大空闲时间 超过时间未更新的连接将被关闭
+     */
+    String RPC_CLIENT_MAX_IDLE_TIME = "rpc.client.maxIdleTime";
+
+    /**
+     * Rpc 客户端连接最大存活时间 超过设置时间的连接将被关闭
+     */
+    String RPC_CLIENT_MAX_TIME_LIVE = "rpc.client.maxLiveTime";
 
     /**
      * Rpc Disruptor

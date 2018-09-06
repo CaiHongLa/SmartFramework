@@ -45,8 +45,8 @@ public class AutowiredServiceInvocationHandler implements InvocationHandler {
         String ip;
         int port;
         if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-            String className = invoker.getInterface().getName().replace(".", "/");
-            String zookeeperPath = invoker.getZookeeperService().getRpcServicePath() + "/" + invoker.getZookeeperId() + "/" + className;
+            String className = invoker.getInterface().getName();
+            String zookeeperPath = invoker.getZookeeperService().getRpcServicePath() + "/" + invoker.getZookeeperId() + "/" + className.replace(".", "/");
             DistributedServiceProvider node = invoker.getZookeeperService().getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.RPC);
             if (node instanceof RpcServiceProvider) {
                 ip = node.getIp();

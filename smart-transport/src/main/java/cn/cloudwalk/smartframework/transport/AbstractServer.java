@@ -33,10 +33,10 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
         accepts = transportContext.getParameter(ProtocolConstants.SERVER_ACCEPTS, 1000);
         try {
             doOpen();
-            logger.info(getClass().getSimpleName() + "Service at address: " + getBindAddress() + " start completion！");
+            logger.info(getClass().getSimpleName() + " at address: " + getBindAddress() + " start completion！");
         } catch (Throwable throwable) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(getClass().getSimpleName() + "Service at address: " +
-                    getBindAddress() + "start failed, reason: " + throwable.getMessage()));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(getClass().getSimpleName() + " at address: " +
+                    getBindAddress() + " start failed, reason: " + throwable.getMessage()));
         }
     }
 
@@ -91,6 +91,10 @@ public abstract class AbstractServer extends AbstractEndpoint implements Server 
             super.close();
         } catch (Throwable e) {
             logger.warn(e.getMessage(), e);
+        }
+        ChannelHandlerDelegate handlerDelegate = getChannelHandlerDelegate();
+        if(handlerDelegate != null){
+            handlerDelegate.close();
         }
         try {
             doClose();

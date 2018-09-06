@@ -93,7 +93,7 @@ public class JQueryTableService extends BaseComponent {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(exception));
             }
         }
-        resultModel.setDatas((List<Map<String, Object>>) list);
+        resultModel.setDatas(list);
         return resultModel;
     }
 

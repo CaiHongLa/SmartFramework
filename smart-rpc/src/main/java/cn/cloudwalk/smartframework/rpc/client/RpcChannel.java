@@ -1,4 +1,4 @@
-package cn.cloudwalk.smartframework.rpc.netty.http;
+package cn.cloudwalk.smartframework.rpc.client;
 
 import cn.cloudwalk.smartframework.transport.AbstractChannel;
 import cn.cloudwalk.smartframework.transport.ChannelHandler;
@@ -15,44 +15,44 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
 /**
- * http rpc channel
+ * 传输层Rpc连接
  *
  * @author LIYANHUI
- * @since 2.0.0
+ * @since 2.0.10
  */
-public class RpcHttpChannel extends AbstractChannel {
+public class RpcChannel extends AbstractChannel {
 
-    private static final Logger logger = LogManager.getLogger(RpcHttpChannel.class);
+    private static final Logger logger = LogManager.getLogger(RpcChannel.class);
 
-    private static final ConcurrentMap<Channel, RpcHttpChannel> CHANNEL_MAP = new ConcurrentHashMap<>();
+    private static final ConcurrentMap<Channel, RpcChannel> CHANNEL_MAP = new ConcurrentHashMap<>();
 
     private final Channel channel;
 
     private final Map<String, Object> attributes = new ConcurrentHashMap<>();
 
-    private RpcHttpChannel(TransportContext transportContext, Channel channel, ChannelHandler handler) {
+    private RpcChannel(TransportContext transportContext, Channel channel, ChannelHandler handler) {
         super(transportContext, handler);
         this.channel = channel;
     }
 
-    static RpcHttpChannel getOrAddChannel(TransportContext transportContext, Channel ch, ChannelHandler handler) {
+    public static RpcChannel getOrAddChannel(TransportContext transportContext, Channel ch, ChannelHandler handler) {
         if (ch == null) {
             return null;
         }
-        RpcHttpChannel ret = CHANNEL_MAP.get(ch);
+        RpcChannel ret = CHANNEL_MAP.get(ch);
         if (ret == null) {
-            RpcHttpChannel rpcHttpChannel = new RpcHttpChannel(transportContext, ch, handler);
+            RpcChannel rpcChannel = new RpcChannel(transportContext, ch, handler);
             if (ch.isActive()) {
-                ret = CHANNEL_MAP.putIfAbsent(ch, rpcHttpChannel);
+                ret = CHANNEL_MAP.putIfAbsent(ch, rpcChannel);
             }
             if (ret == null) {
-                ret = rpcHttpChannel;
+                ret = rpcChannel;
             }
         }
         return ret;
     }
 
-    static void removeChannelIfDisconnected(Channel ch) {
+    public static void removeChannelIfDisconnected(Channel ch) {
         if (ch != null && !ch.isActive()) {
             CHANNEL_MAP.remove(ch);
         }
@@ -172,19 +172,14 @@ public class RpcHttpChannel extends AbstractChannel {
         if (getClass() != obj.getClass()) {
             return false;
         }
-        RpcHttpChannel other = (RpcHttpChannel) obj;
+        RpcChannel other = (RpcChannel) obj;
         if (channel == null) {
-            if (other.channel != null) {
-                return false;
-            }
-        } else if (!channel.equals(other.channel)) {
-            return false;
-        }
-        return true;
+            return other.channel == null;
+        } else return channel.equals(other.channel);
     }
 
     @Override
     public String toString() {
-        return "RpcHttpChannel [channel=" + channel + "]";
+        return "RpcChannel [channel=" + channel + "]";
     }
 }
