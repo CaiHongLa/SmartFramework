@@ -5,9 +5,15 @@ import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalS
 import cn.cloudwalk.smartframework.transport.Channel;
 import cn.cloudwalk.smartframework.transport.ChannelHandler;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
+import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import com.lmax.disruptor.EventFactory;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 传输连接事件
@@ -25,6 +31,10 @@ public class ChannelEvent {
     private Throwable exception;
     private Object message;
     private transient ChannelHandler handler;
+    protected static final ExecutorService SHARED_EXECUTOR = new ThreadPoolExecutor(100, 200,
+            0L, TimeUnit.MILLISECONDS,
+            new LinkedBlockingQueue<>(65536), new ThreadFactoryBuilder()
+            .setNameFormat("Shared-pool").build(), new ThreadPoolExecutor.AbortPolicy());
 
     public ChannelEvent() {
     }
@@ -50,6 +60,8 @@ public class ChannelEvent {
                     this.handler.send(this.channel, this.message);
                     break;
                 case RECEIVED:
+//                    ChannelHandler handlerCOpy = handler;
+//                    SHARED_EXECUTOR.execute(new ChannelEventRunnable(channel, handlerCOpy, ChannelEventRunnable.ChannelState.RECEIVED, message));
                     this.handler.received(this.channel, this.message);
                     break;
                 case CAUGHT:

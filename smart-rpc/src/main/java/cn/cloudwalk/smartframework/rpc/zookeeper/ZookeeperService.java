@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.Closeable;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
@@ -334,6 +335,16 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Override
     public String getRpcServicePath() {
         return this.getRootPath() + "/rpc";
+    }
+
+    /**
+     * @since 2.0.10
+     */
+    @PreDestroy
+    public void destroy(){
+        if(client != null){
+            client.close();
+        }
     }
 
     //*************************************private********************************************

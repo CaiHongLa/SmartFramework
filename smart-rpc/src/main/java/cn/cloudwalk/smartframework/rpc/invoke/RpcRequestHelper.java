@@ -1,6 +1,7 @@
 package cn.cloudwalk.smartframework.rpc.invoke;
 
 import cn.cloudwalk.smartframework.clientcomponents.client.CloseableClient;
+import cn.cloudwalk.smartframework.clientcomponents.client.TcpRoute;
 import cn.cloudwalk.smartframework.clientcomponents.client.conn.PoolingTcpClientConnectionManager;
 import cn.cloudwalk.smartframework.clientcomponents.client.pool.CPool;
 import cn.cloudwalk.smartframework.clientcomponents.core.config.RequestConfig;
@@ -13,7 +14,6 @@ import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.net.InetSocketAddress;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -33,7 +33,7 @@ public final class RpcRequestHelper {
 
     private static final Logger logger = LogManager.getLogger(RpcRequestHelper.class);
 
-    private static ConcurrentMap<Integer, CloseableClient> clients;
+    private static ConcurrentMap<TcpRoute, CloseableClient> clients;
     private static Map<String, String> params;
 
     static {
@@ -66,18 +66,18 @@ public final class RpcRequestHelper {
     }
 
     /**
-     * @param host
+     * @param route
      * @return
      * @since 2.0.10
      */
-    static synchronized CloseableClient getOrCreateClient(InetSocketAddress host) {
-        Integer cacheKey = ("SYNC_RPC_" + host.getHostName() + "_" + host.getPort()).hashCode();
+    static synchronized CloseableClient getOrCreateClient(TcpRoute route) {
+        long start = System.currentTimeMillis();
         if (clients == null) {
             clients = new ConcurrentHashMap<>();
         }
-
-        if (clients.containsKey(cacheKey)) {
-            return clients.get(cacheKey);
+        logger.info("hash : " + ( System.currentTimeMillis() - start));
+        if (clients.containsKey(route)) {
+            return clients.get(route);
         } else {
             logger.info("init CloseableClient");
             RequestConfig requestConfig = RequestConfig.custom()
@@ -92,7 +92,7 @@ public final class RpcRequestHelper {
                     .setDefaultRequestConfig(requestConfig)
                     .setMaxIdleTime(getIntParam(ProtocolConstants.RPC_CLIENT_MAX_IDLE_TIME, 60), TimeUnit.SECONDS)
                     .build();
-            clients.put(cacheKey, closeableClient);
+            clients.put(route, closeableClient);
             logger.info("CloseableClient init completed");
             return closeableClient;
         }

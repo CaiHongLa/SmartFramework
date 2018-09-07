@@ -38,4 +38,5 @@ public class MessageChannelHandler extends WrappedChannelHandler {
     public void caught(Channel channel, Throwable exception) throws TransportException {
         handler.caught(channel, exception);
     }
+
 }

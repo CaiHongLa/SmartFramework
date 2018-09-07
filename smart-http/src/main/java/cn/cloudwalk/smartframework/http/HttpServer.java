@@ -28,6 +28,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Http 服务
@@ -72,10 +73,10 @@ public class HttpServer extends AbstractServer implements Server {
         bootstrap.group(bossGroup, workerGroup)
                 .option(ChannelOption.SO_BACKLOG, 1024)
                 .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.SO_RCVBUF, 32 * 1024)
-                .option(ChannelOption.SO_SNDBUF, 32 * 1024)
+                .option(ChannelOption.SO_RCVBUF, 256 * 1024)
+                .option(ChannelOption.SO_SNDBUF, 256 * 1024)
                 .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+//                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childHandler(new ChannelInitializer<io.netty.channel.Channel>() {
                     @Override
                     protected void initChannel(io.netty.channel.Channel ch) {
@@ -121,6 +122,12 @@ public class HttpServer extends AbstractServer implements Server {
             if (bootstrap != null) {
                 bossGroup.shutdownGracefully();
                 workerGroup.shutdownGracefully();
+                try {
+                    bossGroup.awaitTermination(5, TimeUnit.SECONDS);
+                    workerGroup.awaitTermination(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    logger.error(e);
+                }
             }
         } catch (Throwable e) {
             logger.warn(e.getMessage(), e);

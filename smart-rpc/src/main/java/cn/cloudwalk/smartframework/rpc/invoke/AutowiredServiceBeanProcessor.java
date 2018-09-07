@@ -11,7 +11,10 @@ import org.springframework.beans.factory.config.BeanPostProcessor;
 import org.springframework.stereotype.Component;
 import org.springframework.util.ReflectionUtils;
 
+import javax.annotation.PreDestroy;
 import java.lang.reflect.Proxy;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * 用于加载Service中被AutowiredService注解的字段
@@ -24,6 +27,8 @@ import java.lang.reflect.Proxy;
 public class AutowiredServiceBeanProcessor implements BeanPostProcessor {
 
     private static final Logger logger = LogManager.getLogger(AutowiredServiceBeanProcessor.class);
+
+    private final List<AutowiredServiceInvocationHandler> handlers = new ArrayList<>();
 
     @Autowired
     @Qualifier("zookeeperService")
@@ -39,14 +44,16 @@ public class AutowiredServiceBeanProcessor implements BeanPostProcessor {
                 String zookeeperId = autowiredService.value();
                 boolean async = autowiredService.async();
                 Class<?> interfaceClass = field.getType();
-                RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService, async);
+                RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService, async, true);
+                AutowiredServiceInvocationHandler handler = new AutowiredServiceInvocationHandler(invoker);
                 Object value = Proxy.newProxyInstance(
                             interfaceClass.getClassLoader(),
                             new Class<?>[]{interfaceClass},
-                            new AutowiredServiceInvocationHandler(invoker));
+                        handler);
                 ReflectionUtils.makeAccessible(field);
                 field.set(bean, value);
                 logger.info("Registered autowired service : " + interfaceClass.getSimpleName() + " annotated by " + autowiredService + " on zookeeper id : " + zookeeperId);
+                handlers.add(handler);
             }
         });
         return bean;
@@ -55,5 +62,12 @@ public class AutowiredServiceBeanProcessor implements BeanPostProcessor {
     @Override
     public Object postProcessAfterInitialization(Object bean, String beanName) throws BeansException {
         return bean;
+    }
+
+    @PreDestroy
+    public void destroy(){
+        for(AutowiredServiceInvocationHandler handler : handlers){
+            handler.removeThreadLocal();
+        }
     }
 }

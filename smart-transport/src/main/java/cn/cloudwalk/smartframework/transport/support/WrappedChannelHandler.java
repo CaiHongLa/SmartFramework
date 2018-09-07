@@ -10,7 +10,6 @@ import com.google.common.util.concurrent.ThreadFactoryBuilder;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -48,9 +47,16 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
     @Override
     public void close() {
         try {
-            if (executor != null) {
-                executor.shutdown();
+            if (this.executor != null) {
+                this.executor.shutdownNow();
+
+                try {
+                    this.executor.awaitTermination(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                }
             }
+
             if(handler != null){
                 handler.close();
             }
@@ -96,5 +102,14 @@ public class WrappedChannelHandler implements ChannelHandlerDelegate {
     public TransportContext getTransportContext() {
         return transportContext;
     }
+
+    protected final ExecutorService getExecutorService() {
+        ExecutorService executor_1 = executor;
+        if (executor_1 == null || executor_1.isShutdown()) {
+            executor_1 = SHARED_EXECUTOR;
+        }
+        return executor_1;
+    }
+
 
 }

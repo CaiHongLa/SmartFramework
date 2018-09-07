@@ -64,13 +64,4 @@ public class DefaultChannelHandler extends WrappedChannelHandler {
             throw new TransportException(channel, getClass() + " exception handling exception", t);
         }
     }
-
-    private ExecutorService getExecutorService() {
-        ExecutorService executor_1 = executor;
-        if (executor_1 == null || executor_1.isShutdown()) {
-            executor_1 = SHARED_EXECUTOR;
-        }
-        return executor_1;
-    }
-
 }

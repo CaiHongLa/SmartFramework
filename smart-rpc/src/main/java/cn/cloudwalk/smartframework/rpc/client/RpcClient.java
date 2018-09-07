@@ -123,9 +123,14 @@ public class RpcClient extends AbstractClient {
     @Override
     protected void doClose() {
         if (bootstrap != null) {
-            bootstrap.config().group().shutdownGracefully(1, 10, TimeUnit.SECONDS);
+            EventLoopGroup eventLoopGroup = bootstrap.config().group();
+            eventLoopGroup.shutdownGracefully(1, 5, TimeUnit.SECONDS);
+            try {
+                eventLoopGroup.awaitTermination(5, TimeUnit.SECONDS);
+            } catch (InterruptedException e) {
+                logger.error(e);
+            }
         }
-
     }
 
     @Override

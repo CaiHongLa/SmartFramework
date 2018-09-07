@@ -9,8 +9,10 @@ import cn.cloudwalk.smartframework.transport.support.ChannelHandlers;
 import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.PooledByteBufAllocator;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
@@ -24,6 +26,7 @@ import java.net.InetSocketAddress;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.Map;
+import java.util.concurrent.TimeUnit;
 
 /**
  * RpcServer
@@ -64,12 +67,12 @@ public class RpcServer extends AbstractServer implements Server {
         final RpcServerHandler rpcServerHandler = new RpcServerHandler(getTransportContext(), this);
         channels = rpcServerHandler.getChannels();
         bootstrap.group(bossGroup, workerGroup)
-                .option(ChannelOption.SO_BACKLOG, 1024)
-                .option(ChannelOption.TCP_NODELAY, true)
-                .option(ChannelOption.SO_RCVBUF, 32 * 1024)
-                .option(ChannelOption.SO_SNDBUF, 32 * 1024)
-                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+//                .childOption(ChannelOption.SO_BACKLOG, 1024)
+//                .childOption(ChannelOption.TCP_NODELAY, true)
+//                .childOption(ChannelOption.SO_RCVBUF, 256 * 1024)
+//                .childOption(ChannelOption.SO_SNDBUF, 256 * 1024)
+//                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+//                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
                 .childHandler(new ChannelInitializer<io.netty.channel.Channel>() {
                     @Override
                     protected void initChannel(io.netty.channel.Channel ch) {
@@ -114,6 +117,12 @@ public class RpcServer extends AbstractServer implements Server {
             if (bootstrap != null) {
                 bossGroup.shutdownGracefully();
                 workerGroup.shutdownGracefully();
+                try {
+                    bossGroup.awaitTermination(5, TimeUnit.SECONDS);
+                    workerGroup.awaitTermination(5, TimeUnit.SECONDS);
+                } catch (InterruptedException e) {
+                    logger.error(e);
+                }
             }
         } catch (Throwable e) {
             logger.warn(e.getMessage(), e);

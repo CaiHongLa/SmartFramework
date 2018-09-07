@@ -3,6 +3,7 @@ package cn.cloudwalk.smartframework.rpc.client;
 import cn.cloudwalk.smartframework.clientcomponents.core.ClientConnectionOperator;
 import cn.cloudwalk.smartframework.clientcomponents.core.ManagedClient;
 import cn.cloudwalk.smartframework.clientcomponents.core.ManagedClientConnection;
+import cn.cloudwalk.smartframework.clientcomponents.core.Route;
 import cn.cloudwalk.smartframework.clientcomponents.core.config.RequestConfig;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponse;
 import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFuture;
@@ -18,7 +19,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.Map;
 
 /**
@@ -29,9 +29,9 @@ import java.util.Map;
 public class RpcClientConnectionOperator implements ClientConnectionOperator {
 
     @Override
-    public void connect(ManagedClientConnection conn, InetSocketAddress host, RequestConfig requestConfig) throws IOException {
+    public void connect(ManagedClientConnection conn, Route route, RequestConfig requestConfig) throws IOException {
         Map<String, String> parameters = requestConfig.getParams();
-        TransportContext transportContext = new TransportContext(host.getHostName(), host.getPort(), parameters, new RpcProtocol.NettyClientCodec(), new RpcTransport(), new RpcThreadPool(), new MessageDispatcher());
+        TransportContext transportContext = new TransportContext(route.getHostIp(), route.getHostPort(), parameters, new RpcProtocol.NettyClientCodec(), new RpcTransport(), new RpcThreadPool(), new MessageDispatcher());
         RpcProtocol protocol = new RpcProtocol(transportContext, requestHandler);
         protocol.connect();
         Client client = protocol.getClient();
@@ -62,7 +62,7 @@ public class RpcClientConnectionOperator implements ClientConnectionOperator {
         @Override
         public void received(Channel channel, Object message) {
             NettyRpcResponse response = (NettyRpcResponse) message;
-            logger.info("request result：" + response);
+//            logger.info("request result：" + response);
             String requestId = response.getRequestId();
             NettyRpcResponseFuture future = FutureSet.futureMap.get(requestId);
             if (future != null) {

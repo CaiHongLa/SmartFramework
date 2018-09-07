@@ -30,7 +30,7 @@ import java.util.Map;
 
 
 /**
- * AutowiredService
+ * RemoteService
  *
  * @author LIYANHUI
  * @since 1.0.0

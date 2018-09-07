@@ -31,7 +31,7 @@ public class RpcInvokeService extends BaseComponent implements IRpcInvokeService
     public <F> F syncCall(Class<F> interfaceClass, String zookeeperId) {
         IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
         if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-            RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService);
+            RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService, false);
             return (F) Proxy.newProxyInstance(
                     interfaceClass.getClassLoader(),
                     new Class<?>[]{interfaceClass},
@@ -46,7 +46,7 @@ public class RpcInvokeService extends BaseComponent implements IRpcInvokeService
     public <F> F asyncCall(Class<F> interfaceClass, String zookeeperId) {
         IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
         if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-            RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService, true);
+            RpcInvoker<?> invoker = new RpcInvoker<>(interfaceClass, zookeeperId, zookeeperService, true, false);
             return (F) Proxy.newProxyInstance(
                     interfaceClass.getClassLoader(),
                     new Class<?>[]{interfaceClass},

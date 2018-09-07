@@ -2,13 +2,15 @@ package cn.cloudwalk.smartframework.transport;
 
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
 
+import java.io.Closeable;
+
 /**
  * Handler
  *
  * @author LIYANHUI
  * @since 1.0.0
  */
-public interface ChannelHandler {
+public interface ChannelHandler extends Closeable {
 
     /**
      * 连接建立时触发

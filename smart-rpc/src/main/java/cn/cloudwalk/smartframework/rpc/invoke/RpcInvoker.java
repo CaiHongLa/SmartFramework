@@ -12,7 +12,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
-import java.net.InetSocketAddress;
 import java.util.UUID;
 
 /**
@@ -34,15 +33,31 @@ public class RpcInvoker<T> {
 
     private IZookeeperService zookeeperService;
 
-    public RpcInvoker(Class<T> type, String zookeeperId, IZookeeperService zookeeperService) {
-        this(type, zookeeperId, zookeeperService, false);
+    private final ThreadLocal<NettyRpcRequest> requestThreadLocal = ThreadLocal.withInitial(NettyRpcRequest::new);
+
+    private final ThreadLocal<RpcResult> resultThreadLocal = ThreadLocal.withInitial(() -> new RpcResult(new Object()));
+
+    private final ThreadLocal<TcpRoute> routeThreadLocal = ThreadLocal.withInitial(TcpRoute::new);
+
+    /**
+     * 是否从Spring Bean工厂注册 如果不是 则认为是RpcInvokeService New出来的 需要在执行完调用后清除ThreadLocal对象
+     */
+    private final boolean isBean;
+
+    public RpcInvoker(Class<T> type, String zookeeperId, IZookeeperService zookeeperService, boolean isBean) {
+        this(type, zookeeperId, zookeeperService, false, isBean);
     }
 
-    public RpcInvoker(Class<T> type, String zookeeperId, IZookeeperService zookeeperService, boolean async) {
+    public RpcInvoker(Class<T> type, String zookeeperId, IZookeeperService zookeeperService, boolean async, boolean isBean) {
         this.type = type;
         this.zookeeperId = zookeeperId;
         this.zookeeperService = zookeeperService;
         this.async = async;
+        this.isBean = isBean;
+    }
+
+    public boolean isBean(){
+        return isBean;
     }
 
     public boolean isAsync() {
@@ -62,23 +77,29 @@ public class RpcInvoker<T> {
     }
 
     public RpcResult invoke(RpcInvocation invocation) {
-        logger.info("Ready to invoke remote service : " + invocation + " , async : " + async);
-        NettyRpcRequest request = new NettyRpcRequest();
+//        logger.info("Ready to invoke remote service : " + invocation + " , async : " + async);
+        long start = System.currentTimeMillis();
+        NettyRpcRequest request = requestThreadLocal.get();
         request.setParameterTypes(invocation.getParameterTypes());
         request.setParameters(invocation.getArguments());
         request.setClassName(invocation.getClassName());
         request.setMethodName(invocation.getMethodName());
         request.setOneWay(invocation.isOneWay());
         request.setRequestId(UUID.randomUUID().toString());
-        RpcResult result = new RpcResult(new Object());
-        InetSocketAddress host = new InetSocketAddress(invocation.getTargetIp(), invocation.getTargetPort());
-        CloseableClient closeableClient = RpcRequestHelper.getOrCreateClient(host);
+        RpcResult result = resultThreadLocal.get();
+        TcpRoute route = routeThreadLocal.get();
+        route.setHostIp(invocation.getTargetIp());
+        route.setHostPort(invocation.getTargetPort());
+        CloseableClient closeableClient = RpcRequestHelper.getOrCreateClient(route);
+        logger.info("get client : " + (System.currentTimeMillis() - start));
+        start = System.currentTimeMillis();
         try {
-            NettyRpcResponseFuture responseFuture = (NettyRpcResponseFuture) closeableClient.execute(new TcpRoute(host, host), request);
-            if(invocation.isOneWay()) {
+            NettyRpcResponseFuture responseFuture = (NettyRpcResponseFuture) closeableClient.execute(route, request);
+            logger.info("invoke : " + (System.currentTimeMillis() - start));
+            if (invocation.isOneWay()) {
                 return result;
             }
-            if(async) {
+            if (async) {
                 RpcContext.getContext().setFuture(responseFuture);
                 return result;
             }
@@ -90,5 +111,11 @@ public class RpcInvoker<T> {
             logger.error("Error while do rpc invoke", e);
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
         }
+    }
+
+    void removeThreadLocal() {
+        requestThreadLocal.remove();
+        resultThreadLocal.remove();
+        routeThreadLocal.remove();
     }
 }

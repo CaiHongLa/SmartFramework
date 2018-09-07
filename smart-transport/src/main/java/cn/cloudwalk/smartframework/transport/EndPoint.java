@@ -3,6 +3,7 @@ package cn.cloudwalk.smartframework.transport;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
 
+import java.io.Closeable;
 import java.net.InetSocketAddress;
 
 /**
@@ -11,7 +12,7 @@ import java.net.InetSocketAddress;
  * @author LIYANHUI
  * @since 1.0.0
  */
-public interface EndPoint {
+public interface EndPoint extends Closeable {
 
     /**
      * 获取协议上下文

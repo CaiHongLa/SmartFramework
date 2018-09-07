@@ -29,6 +29,8 @@ class RpcInvocation {
 
     private static final List<String> ONE_WAY_REQUEST_LIST = Arrays.asList("void", "Void");
 
+    RpcInvocation(){}
+
     RpcInvocation(String ip, int port, String className, Method method, Object[] arguments) {
         this.className = className;
         this.methodName = method.getName();
@@ -40,6 +42,36 @@ class RpcInvocation {
         this.arguments = arguments == null ? new Object[0] : arguments;
         this.ip = ip;
         this.port = port;
+    }
+
+    RpcInvocation setClassName(String className) {
+        this.className = className;
+        return this;
+    }
+
+    RpcInvocation setMethod(Method method) {
+        this.methodName = method.getName();
+        String returnClassName = method.getReturnType().getName();
+        if (ONE_WAY_REQUEST_LIST.contains(returnClassName)) {
+            this.oneWay = true;
+        }
+        this.parameterTypes = method.getParameterTypes();
+        return this;
+    }
+
+    RpcInvocation setArguments(Object[] arguments) {
+        this.arguments = arguments == null ? new Object[0] : arguments;
+        return this;
+    }
+
+    RpcInvocation setIp(String ip) {
+        this.ip = ip;
+        return this;
+    }
+
+    RpcInvocation setPort(int port) {
+        this.port = port;
+        return this;
     }
 
     String getClassName() {

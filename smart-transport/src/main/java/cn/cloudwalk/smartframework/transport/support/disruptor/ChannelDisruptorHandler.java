@@ -8,14 +8,12 @@ import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
 import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
 import com.lmax.disruptor.BlockingWaitStrategy;
+import com.lmax.disruptor.WorkHandler;
 import com.lmax.disruptor.dsl.Disruptor;
 import com.lmax.disruptor.dsl.ProducerType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
-import java.io.IOException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadFactory;
 
 /**
@@ -32,15 +30,14 @@ public class ChannelDisruptorHandler implements ChannelHandlerDelegate {
     /**
      * Disruptor RingBuffer Size (2的N次方)
      */
-    private static final int DISRUPTOR_RING_BUFFER_SIZE = 262144;
+    private static final int DISRUPTOR_RING_BUFFER_SIZE = 1024;
 
     /**
-     * 异步消息处理的Disruptor
+     * 异步消息处理的RingBuffer
      */
     private volatile Disruptor<ChannelEvent> disruptor;
     private ChannelHandler handler;
-    private ExecutorService executor;
-    private final ThreadLocal<EventInfo> threadLocalInfo = new ThreadLocal<>();
+    private final ThreadLocal<EventInfo> threadLocalInfo = ThreadLocal.withInitial(() -> new EventInfo(new ChannelEventTranslator()));
 
     /**
      * 是否开启Disruptor
@@ -63,26 +60,21 @@ public class ChannelDisruptorHandler implements ChannelHandlerDelegate {
         this.disruptorSwitch = (disruptorSwitchValue == DISRUPTOR_SWITCH_ON);
         if (disruptorSwitch) {
             ThreadFactory factory = new NamedThreadFactory(transportContext.getParameter(ProtocolConstants.DISRUPTOR_CONSUMER_POOL_NAME, "channel_disruptor_consumer_pool"), false);
-            this.executor = Executors.newSingleThreadExecutor(factory);
-            initInfoForExecutorThread();
             this.disruptor = new Disruptor<>(
                     ChannelEvent.FACTORY,
                     DISRUPTOR_RING_BUFFER_SIZE,
                     factory,
-                    ProducerType.SINGLE,
+                    ProducerType.MULTI,
                     new BlockingWaitStrategy()
             );
+            WorkHandler<ChannelEvent> [] workHandlers = new ChannelEventHandler[16];
+            for(int i = 0; i < 16 ; i++){
+                workHandlers[i] = new ChannelEventHandler();
+            }
             this.disruptor.setDefaultExceptionHandler(new ChannelEventExceptionHandler());
-            this.disruptor.handleEventsWith(new ChannelEventHandler());
+            this.disruptor.handleEventsWithWorkerPool(workHandlers);
             this.disruptor.start();
         }
-    }
-
-    private void initInfoForExecutorThread() {
-        this.executor.submit(() -> {
-            EventInfo info = new EventInfo(new ChannelEventTranslator());
-            this.threadLocalInfo.set(info);
-        });
     }
 
     @Override
@@ -111,7 +103,8 @@ public class ChannelDisruptorHandler implements ChannelHandlerDelegate {
             Disruptor<ChannelEvent> temp = disruptor;
             if (temp == null) {
                 logger.error("The Disruptor queue has been closed, and the message is no longer received.");
-            } else if (temp.getRingBuffer().remainingCapacity() == 0L) {
+            } else if (disruptor.getRingBuffer().remainingCapacity() == 0L) {
+                logger.warn("The Disruptor has no remaining buffer, use handler instead");
                 this.handler.received(channel, message);
             } else {
                 info.eventTranslator.setEventValues(handler, channel, ChannelEvent.ChannelState.RECEIVED, null, message);
@@ -144,6 +137,7 @@ public class ChannelDisruptorHandler implements ChannelHandlerDelegate {
         if(disruptor != null){
             disruptor.shutdown();
         }
+        threadLocalInfo.remove();
     }
 
     /**
