@@ -391,7 +391,7 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
                     if (data != null && data.length > 0) {
                         HttpServiceProvider info = JsonUtil.json2Object(new String(data, StandardCharsets.UTF_8), HttpServiceProvider.class);
                         String registerTime = DateUtil.formatDate(info.getRegisterTime(), DateUtil.DATE_PATTERN.yyyy_MM_dd_HH_mm_ss);
-                        printInfo.append(" (Registered ").append(registerTime).append(")");
+                        printInfo.append(" (Registered at ").append(registerTime).append(")");
                     }
                     printInfo.append("\n");
                 } else {

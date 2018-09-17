@@ -1,8 +1,8 @@
 package cn.cloudwalk.smartframework.rpc.client;
 
-import cn.cloudwalk.smartframework.transport.AbstractClient;
-import cn.cloudwalk.smartframework.transport.ChannelHandler;
-import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
+import cn.cloudwalk.smartframework.transportcomponents.AbstractClient;
+import cn.cloudwalk.smartframework.transportcomponents.ChannelHandler;
+import cn.cloudwalk.smartframework.transportcomponents.support.transport.TransportContext;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.buffer.PooledByteBufAllocator;
 import io.netty.channel.*;
@@ -134,7 +134,7 @@ public class RpcClient extends AbstractClient {
     }
 
     @Override
-    protected cn.cloudwalk.smartframework.transport.Channel getChannel() {
+    protected cn.cloudwalk.smartframework.transportcomponents.Channel getChannel() {
         Channel c = channel;
         if (c == null || !c.isActive()) {
             return null;

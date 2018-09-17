@@ -19,9 +19,9 @@
     <dependencies>
         <!-- common 组件支持 -->
         <dependency>
-            <groupId>cn.cloudwalk.smartframework</groupId>
-            <artifactId>smart-transport</artifactId>
-            <version>${smartframework.version}</version>
+            <groupId>cn.cloudwalk.smartframework.transportcomponents</groupId>
+            <artifactId>transportcomponents</artifactId>
+            <version>1.0.0</version>
         </dependency>
         <dependency>
             <groupId>cn.cloudwalk.smartframework</groupId>

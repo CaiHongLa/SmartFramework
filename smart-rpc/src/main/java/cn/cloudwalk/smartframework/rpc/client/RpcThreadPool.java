@@ -1,7 +1,7 @@
 package cn.cloudwalk.smartframework.rpc.client;
 
-import cn.cloudwalk.smartframework.transport.ThreadPool;
-import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
+import cn.cloudwalk.smartframework.transportcomponents.ThreadPool;
+import cn.cloudwalk.smartframework.transportcomponents.support.transport.TransportContext;
 
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;

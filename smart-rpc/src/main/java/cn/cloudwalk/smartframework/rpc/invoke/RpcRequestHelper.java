@@ -10,7 +10,7 @@ import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalS
 import cn.cloudwalk.smartframework.common.util.PropertiesUtil;
 import cn.cloudwalk.smartframework.rpc.client.RpcClientBuilder;
 import cn.cloudwalk.smartframework.rpc.client.RpcClientConnectionOperator;
-import cn.cloudwalk.smartframework.transport.support.ProtocolConstants;
+import cn.cloudwalk.smartframework.transportcomponents.support.ProtocolConstants;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

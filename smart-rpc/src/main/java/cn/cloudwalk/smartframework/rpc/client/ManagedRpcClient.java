@@ -7,8 +7,8 @@ import cn.cloudwalk.smartframework.common.distributed.bean.NettyRpcResponseFutur
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
 import cn.cloudwalk.smartframework.rpc.invoke.FutureSet;
-import cn.cloudwalk.smartframework.transport.Client;
-import cn.cloudwalk.smartframework.transport.support.transport.TransportException;
+import cn.cloudwalk.smartframework.transportcomponents.Client;
+import cn.cloudwalk.smartframework.transportcomponents.support.transport.TransportException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

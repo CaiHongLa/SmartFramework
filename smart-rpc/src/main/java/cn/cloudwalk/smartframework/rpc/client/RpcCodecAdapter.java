@@ -1,7 +1,7 @@
 package cn.cloudwalk.smartframework.rpc.client;
 
-import cn.cloudwalk.smartframework.transport.Codec;
-import cn.cloudwalk.smartframework.transport.support.transport.TransportContext;
+import cn.cloudwalk.smartframework.transportcomponents.Codec;
+import cn.cloudwalk.smartframework.transportcomponents.support.transport.TransportContext;
 import io.netty.buffer.ByteBuf;
 import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandler;
@@ -23,10 +23,10 @@ public class RpcCodecAdapter {
     private final ChannelHandler decoder = new InternalDecoder();
 
     private final Codec codec;
-    private final cn.cloudwalk.smartframework.transport.ChannelHandler handler;
+    private final cn.cloudwalk.smartframework.transportcomponents.ChannelHandler handler;
     private TransportContext transportContext;
 
-    public RpcCodecAdapter(TransportContext transportContext, Codec codec, cn.cloudwalk.smartframework.transport.ChannelHandler handler) {
+    public RpcCodecAdapter(TransportContext transportContext, Codec codec, cn.cloudwalk.smartframework.transportcomponents.ChannelHandler handler) {
         this.transportContext = transportContext;
         this.codec = codec;
         this.handler = handler;

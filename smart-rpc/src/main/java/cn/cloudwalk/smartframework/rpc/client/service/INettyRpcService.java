@@ -1,7 +1,7 @@
 package cn.cloudwalk.smartframework.rpc.client.service;
 
 import cn.cloudwalk.smartframework.common.IBaseComponent;
-import cn.cloudwalk.smartframework.transport.Server;
+import cn.cloudwalk.smartframework.transportcomponents.Server;
 
 /**
  * Rpc服务启动

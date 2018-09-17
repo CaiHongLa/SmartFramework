@@ -8,12 +8,9 @@
     <modules>
         <module>smart-common</module>
         <module>smart-config</module>
-        <module>smart-http</module>
         <module>smart-mvc</module>
         <module>smart-rpc</module>
         <module>smart-task</module>
-        <module>smart-transport</module>
-        <module>smart-netty</module>
     </modules>
 
     <packaging>pom</packaging>

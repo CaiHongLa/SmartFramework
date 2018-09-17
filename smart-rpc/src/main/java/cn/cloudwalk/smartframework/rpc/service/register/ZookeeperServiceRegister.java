@@ -9,7 +9,7 @@ import cn.cloudwalk.smartframework.rpc.bean.PublicHttpServiceVO;
 import cn.cloudwalk.smartframework.rpc.bean.PublicRpcServiceVO;
 import cn.cloudwalk.smartframework.rpc.client.service.INettyRpcService;
 import cn.cloudwalk.smartframework.rpc.service.holder.IPublicServiceHolder;
-import cn.cloudwalk.smartframework.transport.Server;
+import cn.cloudwalk.smartframework.transportcomponents.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
