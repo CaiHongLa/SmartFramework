@@ -127,6 +127,7 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
         try {
             return this.client.checkExists().forPath(path) != null;
         } catch (Exception e) {
+            logger.error("Error while doing exist check ", e);
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
         }
     }

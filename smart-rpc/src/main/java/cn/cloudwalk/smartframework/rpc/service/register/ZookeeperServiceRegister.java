@@ -5,6 +5,7 @@ import cn.cloudwalk.smartframework.common.distributed.IZookeeperRegister;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
 import cn.cloudwalk.smartframework.common.distributed.provider.HttpServiceProvider;
 import cn.cloudwalk.smartframework.common.distributed.provider.RpcServiceProvider;
+import cn.cloudwalk.smartframework.common.util.TextUtil;
 import cn.cloudwalk.smartframework.rpc.bean.PublicHttpServiceVO;
 import cn.cloudwalk.smartframework.rpc.bean.PublicRpcServiceVO;
 import cn.cloudwalk.smartframework.rpc.client.service.INettyRpcService;
@@ -53,7 +54,7 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
         }
 
         ServletContext context = getServletContext();
-        if(null == context){
+        if (null == context) {
             logger.error("Note: The current application is not deployed in the Servlet container, so all Http services will not be registered!");
         }
 
@@ -87,14 +88,10 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
                 if (controllerMappingName != null && controllerMappingName.length > 0) {
                     for (String controllerMapping : controllerMappingName) {
                         String[] methodMappingName = httpServiceVO.getMethodMappingName();
-                        if (controllerMapping.startsWith("/")) {
-                            controllerMapping = controllerMapping.substring(1);
-                        }
+                        controllerMapping = formatRequestMapping(controllerMapping);
                         for (String methodMapping : methodMappingName) {
-                            if (!methodMapping.startsWith("/")) {
-                                methodMapping = "/" + methodMapping;
-                            }
-                            String userPath = controllerMapping + methodMapping;
+                            methodMapping = formatRequestMapping(methodMapping);
+                            String userPath = controllerMapping + "/" + methodMapping;
                             String nodePath = httpRootPath + userPath + httpProviderPath;
                             this.registerHttpServiceProvider(nodePath, controllerMapping, methodMapping, zookeeperId, localIp, httpPort);
                         }
@@ -102,9 +99,7 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
                 } else {
                     String[] methodMappingName = httpServiceVO.getMethodMappingName();
                     for (String methodMapping : methodMappingName) {
-                        if (methodMapping.startsWith("/")) {
-                            methodMapping = methodMapping.substring(1);
-                        }
+                        methodMapping = formatRequestMapping(methodMapping);
                         String nodePath = httpRootPath + methodMapping + httpProviderPath;
                         this.registerHttpServiceProvider(nodePath, null, methodMapping, zookeeperId, localIp, httpPort);
                     }
@@ -154,6 +149,20 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
         node.setPort(localPort);
         node.setRegisterTime(new Date());
         this.zookeeperService.registerService(registerPath, node);
+    }
+
+    private String formatRequestMapping(String requestMapping) {
+        if (TextUtil.isEmpty(requestMapping)) {
+            throw new IllegalArgumentException("requestMapping is null");
+        }
+        String copy = requestMapping;
+        if (copy.startsWith("/")) {
+            copy = copy.substring(1);
+        }
+        if (copy.endsWith("/")) {
+            copy = copy.substring(0, copy.length() - 1);
+        }
+        return copy;
     }
 
     private void deleteExistPath(String registerPath) {

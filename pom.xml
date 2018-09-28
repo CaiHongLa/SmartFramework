@@ -20,7 +20,7 @@
         <repository>
             <id>nexus-yckj</id>
             <name>nexus-yckj</name>
-            <url>http://nexus.yc/nexus/content/repositories/releases/</url>
+            <url>http://nexus.cloudwalk.work/nexus/content/repositories/releases/</url>
         </repository>
     </distributionManagement>
 
@@ -35,19 +35,6 @@
                     <target>1.8</target>
                     <encoding>UTF-8</encoding>
                 </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-source-plugin</artifactId>
-                <version>3.0.1</version>
-                <executions>
-                    <execution>
-                        <id>attach-sources</id>
-                        <goals>
-                            <goal>jar</goal>
-                        </goals>
-                    </execution>
-                </executions>
             </plugin>
         </plugins>
     </build>

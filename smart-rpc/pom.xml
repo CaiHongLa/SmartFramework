@@ -13,6 +13,7 @@
     <properties>
         <smartframework.version>2.0.10</smartframework.version>
         <clientcomponents.version>1.0.0</clientcomponents.version>
+        <transportcomponents.version>1.0.0</transportcomponents.version>
     </properties>
     <name>smart-rpc</name>
 
@@ -21,7 +22,7 @@
         <dependency>
             <groupId>cn.cloudwalk.smartframework.transportcomponents</groupId>
             <artifactId>transportcomponents</artifactId>
-            <version>1.0.0</version>
+            <version>${transportcomponents.version}</version>
         </dependency>
         <dependency>
             <groupId>cn.cloudwalk.smartframework</groupId>

@@ -77,8 +77,7 @@ public class RpcInvoker<T> {
     }
 
     public RpcResult invoke(RpcInvocation invocation) {
-//        logger.info("Ready to invoke remote service : " + invocation + " , async : " + async);
-        long start = System.currentTimeMillis();
+        logger.info("Ready to invoke remote service : " + invocation + " , async : " + async);
         NettyRpcRequest request = requestThreadLocal.get();
         request.setParameterTypes(invocation.getParameterTypes());
         request.setParameters(invocation.getArguments());
@@ -91,11 +90,8 @@ public class RpcInvoker<T> {
         route.setHostIp(invocation.getTargetIp());
         route.setHostPort(invocation.getTargetPort());
         CloseableClient closeableClient = RpcRequestHelper.getOrCreateClient(route);
-        logger.info("get client : " + (System.currentTimeMillis() - start));
-        start = System.currentTimeMillis();
         try {
             NettyRpcResponseFuture responseFuture = (NettyRpcResponseFuture) closeableClient.execute(route, request);
-            logger.info("invoke : " + (System.currentTimeMillis() - start));
             if (invocation.isOneWay()) {
                 return result;
             }

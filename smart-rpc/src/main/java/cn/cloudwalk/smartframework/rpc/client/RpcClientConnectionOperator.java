@@ -62,7 +62,7 @@ public class RpcClientConnectionOperator implements ClientConnectionOperator {
         @Override
         public void received(Channel channel, Object message) {
             NettyRpcResponse response = (NettyRpcResponse) message;
-//            logger.info("request result：" + response);
+            logger.info("request result：" + response);
             String requestId = response.getRequestId();
             NettyRpcResponseFuture future = FutureSet.futureMap.get(requestId);
             if (future != null) {

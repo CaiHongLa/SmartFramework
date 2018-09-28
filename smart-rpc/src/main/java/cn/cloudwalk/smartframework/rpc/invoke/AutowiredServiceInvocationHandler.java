@@ -33,7 +33,6 @@ public class AutowiredServiceInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        long start = System.currentTimeMillis();
         try {
             String methodName = method.getName();
             Class<?>[] parameterTypes = method.getParameterTypes();
@@ -59,12 +58,9 @@ public class AutowiredServiceInvocationHandler implements InvocationHandler {
                 if (node instanceof RpcServiceProvider) {
                     ip = node.getIp();
                     port = node.getPort();
-                    logger.info("before invoke : " + (System.currentTimeMillis() - start));
-                    start = System.currentTimeMillis();
                     RpcInvocation invocation = invocationThreadLocal.get();
                     invocation.setArguments(args).setClassName(className).setIp(ip).setPort(port).setMethod(method);
                     RpcResult result = invoker.invoke(invocation);
-                    logger.info("after invoke : " + (System.currentTimeMillis() - start));
                     if (invoker.isAsync()) {
                         String returnClassName = method.getReturnType().getName();
                         switch (returnClassName) {

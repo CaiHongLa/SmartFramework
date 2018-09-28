@@ -206,7 +206,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
             IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
             ProtocolOutResponse response = null;
             if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + "" + api;
+                String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + api;
                 DistributedServiceProvider node = this.zookeeperService.getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.HTTP);
                 if (node instanceof HttpServiceProvider) {
                     String fullUrl = ((HttpServiceProvider) node).buildUrl();
@@ -267,7 +267,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
 
                 IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
                 if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                    String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + "" + api;
+                    String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + api;
                     DistributedServiceProvider node = this.zookeeperService.getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.HTTP);
                     if (node instanceof HttpServiceProvider) {
                         HttpServiceProvider httpServiceProvider = (HttpServiceProvider) node;
@@ -313,7 +313,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
             ProtocolOutResponse response = null;
 
             if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + "" + api;
+                String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + api;
                 DistributedServiceProvider node = this.zookeeperService.getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.HTTP);
                 if (node instanceof HttpServiceProvider) {
                     String fullUrl = ((HttpServiceProvider) node).buildUrl();
@@ -374,7 +374,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
 
                 IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
                 if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                    String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + "" + api;
+                    String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + api;
                     List<DistributedServiceProvider> nodes = this.zookeeperService.getAvailableServiceList(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.HTTP);
                     if(nodes != null && !nodes.isEmpty()){
                         for(DistributedServiceProvider node : nodes){
