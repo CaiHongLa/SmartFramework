@@ -5,8 +5,6 @@ import cn.cloudwalk.smartframework.common.distributed.provider.DistributedServic
 import cn.cloudwalk.smartframework.common.distributed.provider.RpcServiceProvider;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Method;
@@ -21,10 +19,6 @@ import java.lang.reflect.Method;
  */
 public class AutowiredServiceInvocationHandler implements InvocationHandler {
 
-    private static final Logger logger = LogManager.getLogger(AutowiredServiceInvocationHandler.class);
-
-    private ThreadLocal<RpcInvocation> invocationThreadLocal = ThreadLocal.withInitial(RpcInvocation::new);
-
     private final RpcInvoker<?> invoker;
 
     public AutowiredServiceInvocationHandler(RpcInvoker<?> invoker) {
@@ -33,64 +27,62 @@ public class AutowiredServiceInvocationHandler implements InvocationHandler {
 
     @Override
     public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
-        try {
-            String methodName = method.getName();
-            Class<?>[] parameterTypes = method.getParameterTypes();
-            if (method.getDeclaringClass() == Object.class) {
-                return method.invoke(invoker, args);
-            }
-            if ("toString".equals(methodName) && parameterTypes.length == 0) {
-                return invoker.toString();
-            }
-            if ("hashCode".equals(methodName) && parameterTypes.length == 0) {
-                return invoker.hashCode();
-            }
-            if ("equals".equals(methodName) && parameterTypes.length == 1) {
-                return invoker.equals(args[0]);
-            }
-            IZookeeperService.RUNNING_MODE runningMode = invoker.getZookeeperService().getRunningMode();
-            String ip;
-            int port;
-            if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                String className = invoker.getInterface().getName();
-                String zookeeperPath = invoker.getZookeeperService().getRpcServicePath() + "/" + invoker.getZookeeperId() + "/" + className.replace(".", "/");
-                DistributedServiceProvider node = invoker.getZookeeperService().getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.RPC);
-                if (node instanceof RpcServiceProvider) {
-                    ip = node.getIp();
-                    port = node.getPort();
-                    RpcInvocation invocation = invocationThreadLocal.get();
-                    invocation.setArguments(args).setClassName(className).setIp(ip).setPort(port).setMethod(method);
-                    RpcResult result = invoker.invoke(invocation);
-                    if (invoker.isAsync()) {
-                        String returnClassName = method.getReturnType().getName();
-                        switch (returnClassName) {
-                            case "int": return 0;
-                            case "double": return 0.0;
-                            case "float": return 0f;
-                            case "short": return Short.valueOf("0");
-                            case "long": return 0L;
-                            case "boolean": return false;
-                            case "byte": return (byte) 0;
-                            case "char": return 'O';
-                            default: return null;
-                        }
+        String methodName = method.getName();
+        Class<?>[] parameterTypes = method.getParameterTypes();
+        if (method.getDeclaringClass() == Object.class) {
+            return method.invoke(invoker, args);
+        }
+        if ("toString".equals(methodName) && parameterTypes.length == 0) {
+            return invoker.toString();
+        }
+        if ("hashCode".equals(methodName) && parameterTypes.length == 0) {
+            return invoker.hashCode();
+        }
+        if ("equals".equals(methodName) && parameterTypes.length == 1) {
+            return invoker.equals(args[0]);
+        }
+        IZookeeperService.RUNNING_MODE runningMode = invoker.getZookeeperService().getRunningMode();
+        String ip;
+        int port;
+        if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
+            String className = invoker.getInterface().getName();
+            String zookeeperPath = invoker.getZookeeperService().getRpcServicePath() + "/" + invoker.getZookeeperId() + "/" + className.replace(".", "/");
+            DistributedServiceProvider node = invoker.getZookeeperService().getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.RPC);
+            if (node instanceof RpcServiceProvider) {
+                ip = node.getIp();
+                port = node.getPort();
+                RpcInvocation invocation = new RpcInvocation(ip, port, className, method, args);
+                RpcResult result = invoker.invoke(invocation);
+                if (invoker.isAsync()) {
+                    String returnClassName = method.getReturnType().getName();
+                    switch (returnClassName) {
+                        case "int":
+                            return 0;
+                        case "double":
+                            return 0.0;
+                        case "float":
+                            return 0f;
+                        case "short":
+                            return Short.valueOf("0");
+                        case "long":
+                            return 0L;
+                        case "boolean":
+                            return false;
+                        case "byte":
+                            return (byte) 0;
+                        case "char":
+                            return 'O';
+                        default:
+                            return null;
                     }
-                    return result.getValueIfHasException();
-                } else {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC invoke node error！"));
                 }
+                return result.getValueIfHasException();
             } else {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE model cannot use rpc invoke！"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("RPC invoke node error！"));
             }
-        } finally {
-            if (!invoker.isBean()) {
-                removeThreadLocal();
-            }
+        } else {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE model cannot use rpc invoke！"));
         }
     }
 
-    void removeThreadLocal(){
-        invocationThreadLocal.remove();
-        invoker.removeThreadLocal();
-    }
 }

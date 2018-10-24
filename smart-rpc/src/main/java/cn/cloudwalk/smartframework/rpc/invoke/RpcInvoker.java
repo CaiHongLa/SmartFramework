@@ -33,12 +33,6 @@ public class RpcInvoker<T> {
 
     private IZookeeperService zookeeperService;
 
-    private final ThreadLocal<NettyRpcRequest> requestThreadLocal = ThreadLocal.withInitial(NettyRpcRequest::new);
-
-    private final ThreadLocal<RpcResult> resultThreadLocal = ThreadLocal.withInitial(() -> new RpcResult(new Object()));
-
-    private final ThreadLocal<TcpRoute> routeThreadLocal = ThreadLocal.withInitial(TcpRoute::new);
-
     /**
      * 是否从Spring Bean工厂注册 如果不是 则认为是RpcInvokeService New出来的 需要在执行完调用后清除ThreadLocal对象
      */
@@ -78,17 +72,15 @@ public class RpcInvoker<T> {
 
     public RpcResult invoke(RpcInvocation invocation) {
         logger.info("Ready to invoke remote service : " + invocation + " , async : " + async);
-        NettyRpcRequest request = requestThreadLocal.get();
+        NettyRpcRequest request = new NettyRpcRequest();
         request.setParameterTypes(invocation.getParameterTypes());
         request.setParameters(invocation.getArguments());
         request.setClassName(invocation.getClassName());
         request.setMethodName(invocation.getMethodName());
         request.setOneWay(invocation.isOneWay());
         request.setRequestId(UUID.randomUUID().toString());
-        RpcResult result = resultThreadLocal.get();
-        TcpRoute route = routeThreadLocal.get();
-        route.setHostIp(invocation.getTargetIp());
-        route.setHostPort(invocation.getTargetPort());
+        RpcResult result = new RpcResult(new Object());
+        TcpRoute route = new TcpRoute(invocation.getTargetIp(), invocation.getTargetPort());
         CloseableClient closeableClient = RpcRequestHelper.getOrCreateClient(route);
         try {
             NettyRpcResponseFuture responseFuture = (NettyRpcResponseFuture) closeableClient.execute(route, request);
@@ -107,11 +99,5 @@ public class RpcInvoker<T> {
             logger.error("Error while do rpc invoke", e);
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
         }
-    }
-
-    void removeThreadLocal() {
-        requestThreadLocal.remove();
-        resultThreadLocal.remove();
-        routeThreadLocal.remove();
     }
 }
