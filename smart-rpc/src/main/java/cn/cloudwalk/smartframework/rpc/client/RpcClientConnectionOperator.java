@@ -15,6 +15,7 @@ import cn.cloudwalk.smartframework.transportcomponents.exchange.support.Exchange
 import cn.cloudwalk.smartframework.transportcomponents.support.dispatcher.MessageDispatcher;
 import cn.cloudwalk.smartframework.transportcomponents.support.transport.TransportContext;
 import cn.cloudwalk.smartframework.transportcomponents.support.transport.TransportException;
+import io.netty.util.ReferenceCountUtil;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -61,13 +62,17 @@ public class RpcClientConnectionOperator implements ClientConnectionOperator {
 
         @Override
         public void received(Channel channel, Object message) {
-            NettyRpcResponse response = (NettyRpcResponse) message;
-            logger.info("request result：" + response);
-            String requestId = response.getRequestId();
-            NettyRpcResponseFuture future = FutureSet.futureMap.get(requestId);
-            if (future != null) {
-                FutureSet.futureMap.remove(requestId);
-                future.done(response);
+            try {
+                NettyRpcResponse response = (NettyRpcResponse) message;
+                logger.info("request result：" + response);
+                String requestId = response.getRequestId();
+                NettyRpcResponseFuture future = FutureSet.futureMap.get(requestId);
+                if (future != null) {
+                    FutureSet.futureMap.remove(requestId);
+                    future.done(response);
+                }
+            }finally {
+                ReferenceCountUtil.release(message);
             }
         }
 

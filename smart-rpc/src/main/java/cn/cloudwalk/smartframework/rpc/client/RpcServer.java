@@ -9,10 +9,8 @@ import cn.cloudwalk.smartframework.transportcomponents.support.ChannelHandlers;
 import cn.cloudwalk.smartframework.transportcomponents.support.ProtocolConstants;
 import cn.cloudwalk.smartframework.transportcomponents.support.transport.TransportContext;
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelInitializer;
-import io.netty.channel.ChannelPipeline;
-import io.netty.channel.EventLoopGroup;
+import io.netty.buffer.PooledByteBufAllocator;
+import io.netty.channel.*;
 import io.netty.channel.epoll.Epoll;
 import io.netty.channel.epoll.EpollEventLoopGroup;
 import io.netty.channel.epoll.EpollServerSocketChannel;
@@ -67,12 +65,19 @@ public class RpcServer extends AbstractServer implements Server {
         final RpcServerHandler rpcServerHandler = new RpcServerHandler(getTransportContext(), this);
         channels = rpcServerHandler.getChannels();
         bootstrap.group(bossGroup, workerGroup)
-//                .childOption(ChannelOption.SO_BACKLOG, 1024)
-//                .childOption(ChannelOption.TCP_NODELAY, true)
-//                .childOption(ChannelOption.SO_RCVBUF, 256 * 1024)
-//                .childOption(ChannelOption.SO_SNDBUF, 256 * 1024)
-//                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
-//                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+                .option(ChannelOption.SO_BACKLOG, 1024)
+                .option(ChannelOption.TCP_NODELAY, true)
+                .option(ChannelOption.SO_REUSEADDR, true)
+                .option(ChannelOption.SO_RCVBUF, 256 * 1024)
+                .option(ChannelOption.SO_SNDBUF, 256 * 1024)
+                .option(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+
+                .childOption(ChannelOption.TCP_NODELAY, true)
+                .childOption(ChannelOption.SO_RCVBUF, 256 * 1024)
+                .childOption(ChannelOption.SO_SNDBUF, 256 * 1024)
+                .childOption(ChannelOption.SO_REUSEADDR, true)
+                .childOption(ChannelOption.ALLOCATOR, PooledByteBufAllocator.DEFAULT)
+
                 .childHandler(new ChannelInitializer<io.netty.channel.Channel>() {
                     @Override
                     protected void initChannel(io.netty.channel.Channel ch) {
