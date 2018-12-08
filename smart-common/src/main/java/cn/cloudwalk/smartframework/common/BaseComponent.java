@@ -44,7 +44,7 @@ public class BaseComponent implements IBaseComponent {
                     "                                                                                                                                                                                 \n" +
                     "                                                                                                                                                                                 \n" +
                     "                                                                                                                                                                                 \n" +
-                    "                                                                                                                                                           on version  2.0.10      ";
+                    "                                                                                                                                                           on version  2.0.20      ";
 
     @Autowired(
             required = false

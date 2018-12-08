@@ -3,7 +3,7 @@
     <parent>
         <artifactId>smartframework</artifactId>
         <groupId>cn.cloudwalk.smartframework</groupId>
-        <version>2.0.10</version>
+        <version>2.0.20</version>
     </parent>
     <modelVersion>4.0.0</modelVersion>
 
@@ -11,9 +11,9 @@
     <packaging>jar</packaging>
 
     <properties>
-        <smartframework.version>2.0.10</smartframework.version>
-        <clientcomponents.version>1.0.0</clientcomponents.version>
-        <transportcomponents.version>1.0.0</transportcomponents.version>
+        <smartframework.version>2.0.20</smartframework.version>
+        <clientcomponents.version>1.0.10</clientcomponents.version>
+        <transportcomponents.version>1.0.10</transportcomponents.version>
     </properties>
     <name>smart-rpc</name>
 
