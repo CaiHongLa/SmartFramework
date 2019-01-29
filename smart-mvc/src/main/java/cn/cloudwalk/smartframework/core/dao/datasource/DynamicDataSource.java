@@ -59,9 +59,9 @@ public class DynamicDataSource extends AbstractRoutingDataSource implements Appl
      */
     @PostConstruct
     public void init() {
-        logger.info("开始注册系统数据源");
+        logger.info("registering data source");
         if(null == configurationService){
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService服务不可用，请导入Config组件！"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService is null，please import Config module in your application context！"));
         }
         Properties jdbcConfig = configurationService.getApplicationCfg();
         if (jdbcConfig != null && jdbcConfig.containsKey("ds.use")) {
@@ -74,7 +74,7 @@ public class DynamicDataSource extends AbstractRoutingDataSource implements Appl
                 String type = jdbcConfig.getProperty(prefix + "type").toUpperCase();
                 boolean isSupport = DataSourceUtil.DATA_SOURCE_TYPE.containsByName(type);
                 if (!isSupport) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("不支持的数据源类型：" + type));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("not support data source type：" + type));
                 }
 
                 Map<String, Object> config = PropertiesUtil.filter(prefix, "type|charsetConverter", true, jdbcConfig);
@@ -84,24 +84,24 @@ public class DynamicDataSource extends AbstractRoutingDataSource implements Appl
             setDefaultDataSouce(major);
             setTargetDataSources(loadedDataSources);
             afterPropertiesSet();
-            logger.info("系统数据源注册完毕");
+            logger.info("data source registered");
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(" application.properties 配置错误，没有找到 ds.use 配置项"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(" application.properties config error，not found ds.use property"));
         }
     }
 
 
     public void registerDataSource(String id, Map<String, Object> properties, DataSourceUtil.DATA_SOURCE_TYPE dataSourceType) {
         if (loadedDataSources.containsKey(id)) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("数据源 " + id + " 已存在，不能重复注册"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("data source " + id + " exist"));
         } else {
-            logger.info("开始注册数据源（id=" + id + ", properties=" + properties + ", dataSourceType=" + dataSourceType + "）");
+            logger.info("registering data source （id=" + id + ", properties=" + properties + ", dataSourceType=" + dataSourceType + "）");
             DataSourceUtil.register(id, properties, dataSourceType, applicationContext);
             DataSource dataSource = applicationContext.getBean(id, DataSource.class);
             loadedDataSources.put(id, dataSource);
-            logger.info("已注册数据源（id=" + id + ", properties=" + properties + ", dataSourceType=" + dataSourceType + "）");
+            logger.info("registered data source（id=" + id + ", properties=" + properties + ", dataSourceType=" + dataSourceType + "）");
             Set<String> loadedDs = this.getLoadedDataSourceNames();
-            logger.info("已载入数据源 " + loadedDs.size() + " 个，为：" + loadedDs);
+            logger.info("loaded " + loadedDs.size() + " data source ：" + loadedDs);
         }
     }
 
@@ -136,7 +136,7 @@ public class DynamicDataSource extends AbstractRoutingDataSource implements Appl
         DEFAULT_DATA_SOURCE_NAME = id;
         DataSource ds = applicationContext.getBean(id, DataSource.class);
         setDefaultTargetDataSource(ds);
-        logger.info("已设置默认数据源为：" + id);
+        logger.info("set default data source：" + id);
     }
 
 

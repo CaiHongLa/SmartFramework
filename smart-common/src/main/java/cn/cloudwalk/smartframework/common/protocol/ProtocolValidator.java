@@ -40,12 +40,12 @@ public class ProtocolValidator {
                 String code = field.getCode();
                 String message = field.getDefaultMessage();
                 if ("typeMismatch".equals(code)) {
-                    throw new InvalidProtocolParamsException(new ProtocolExceptionDesc("400000", "参数类型错误，请检查 " + field.getField() + " 参数的类型是否正确"));
+                    throw new InvalidProtocolParamsException(new ProtocolExceptionDesc("400000", "typeMismatch，please check " + field.getField() + " type"));
                 } else if (message != null && message.contains(":")) {
                     String[] part = message.split(":");
                     throw new InvalidProtocolParamsException(new ProtocolExceptionDesc(part[0], part[1]));
                 } else {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("字段验证失败，可能没有为其配置 message 或其格式不符合规范"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("field valid failed，for not config message or message not right"));
                 }
             } else {
                 ProtocolIn in = this.currentProtocolIn.get();

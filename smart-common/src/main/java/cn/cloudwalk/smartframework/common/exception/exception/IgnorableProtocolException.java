@@ -18,6 +18,6 @@ public class IgnorableProtocolException extends ProtocolException {
 
     @Override
     public String defShortName() {
-        return "可忽略的协议异常";
+        return "Ignorable Protocol Exception";
     }
 }

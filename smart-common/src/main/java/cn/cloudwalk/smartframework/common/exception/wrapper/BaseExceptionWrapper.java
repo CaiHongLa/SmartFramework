@@ -34,7 +34,7 @@ public abstract class BaseExceptionWrapper implements IExceptionWrapper {
     public Object wrapUnexpectedException(BaseExceptionDesc desc) {
         Map<String, Object> data = new HashMap<>();
         data.put("success", false);
-        data.put("respDesc", "意外的异常类型，请检查该异常是否属于 SystemExceptionDesc,BusinessExceptionDesc,ProtocolExceptionDesc 中的其中一种");
+        data.put("respDesc", "unknown exception type，should be one of  SystemExceptionDesc,BusinessExceptionDesc,ProtocolExceptionDesc");
         return data;
     }
 

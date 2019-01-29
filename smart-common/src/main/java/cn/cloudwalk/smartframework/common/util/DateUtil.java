@@ -79,6 +79,20 @@ public class DateUtil {
         return DateUtil.DATE_PATTERN.getPatternBySample(sample);
     }
 
+    public static boolean isOverlap(Date leftStartDate, Date leftEndDate, Date rightStartDate, Date rightEndDate) {
+        return ((leftStartDate.getTime() >= rightStartDate.getTime())
+                && leftStartDate.getTime() < rightEndDate.getTime())
+                ||
+                ((leftStartDate.getTime() > rightStartDate.getTime())
+                        && leftStartDate.getTime() <= rightEndDate.getTime())
+                ||
+                ((rightStartDate.getTime() >= leftStartDate.getTime())
+                        && rightStartDate.getTime() < leftEndDate.getTime())
+                ||
+                ((rightStartDate.getTime() > leftStartDate.getTime())
+                        && rightStartDate.getTime() <= leftEndDate.getTime());
+    }
+
     public enum DATE_PATTERN {
         yyyyMMdd("yyyyMMdd", "^\\d{2,4}\\d{1,2}\\d{1,2}$"),
         yyyy_MM("yyyy/MM", "^\\d{2,4}/\\d{1,2}$"),
@@ -116,7 +130,7 @@ public class DateUtil {
                 }
             }
 
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("日期为空或是不支持的样本格式：" + date));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("date is null or not support format：" + date));
         }
 
         @Override

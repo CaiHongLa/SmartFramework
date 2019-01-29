@@ -1,7 +1,6 @@
 package cn.cloudwalk.smartframework.rpc.zookeeper;
 
 import cn.cloudwalk.smartframework.common.BaseComponent;
-import cn.cloudwalk.smartframework.common.IConfigurationService;
 import cn.cloudwalk.smartframework.common.distributed.IServiceDiscoveryStrategy;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperNodeCacheWatcher;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
@@ -28,7 +27,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import java.io.Closeable;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -53,32 +54,31 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Qualifier("zookeeperNodeCacheWatcher")
     private IZookeeperNodeCacheWatcher zookeeperNodeCacheWatcher;
 
-    @Autowired(required = false)
-    private IConfigurationService configurationService;
-
     public ZookeeperService() {
         this.isStopped = false;
     }
 
     @PostConstruct
     private void loadConfig() {
-        if (null == configurationService) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService服务不可用，请导入Config组件！"));
+        String CONFIG_FILE_NAME = "application.properties";
+        if (!FileUtil.isFileExistOnClasspathOrConfigDir(CONFIG_FILE_NAME)) {
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("No " + CONFIG_FILE_NAME+ " file were found under classpath. "));
+        } else {
+            logger.info("Start loading zookeeper configuration");
+            this.zookeeperConfig = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir(CONFIG_FILE_NAME);
+            String strategy = this.zookeeperConfig.getProperty("zookeeper.service.strategy");
+            if (strategy == null) {
+                strategy = "cn.cloudwalk.smartframework.rpc.service.discovery.adapter.DefaultServiceDiscoveryStrategy";
+                logger.info("No zookeeper.service.strategy policy specified. It has been used automatically with " + strategy);
+            }
+            try {
+                this.discoveryStrategy = (IServiceDiscoveryStrategy) Class.forName(strategy).newInstance();
+                this.discoveryStrategy.setZookeeperService(this);
+            } catch (IllegalAccessException | ClassNotFoundException | InstantiationException exception) {
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc(exception));
+            }
+            logger.info("Loading zookeeper configuration complete");
         }
-        this.zookeeperConfig = configurationService.getApplicationCfg();
-        logger.info("开始加载 zookeeper 配置");
-        String strategy = this.zookeeperConfig.getProperty("zookeeper.service.strategy");
-        if (strategy == null) {
-            strategy = "cn.cloudwalk.smartframework.rpc.service.discovery.adapter.DefaultServiceDiscoveryStrategy";
-            logger.info("没有指定 zookeeper.service.strategy 策略，已自动使用 " + strategy);
-        }
-        try {
-            this.discoveryStrategy = (IServiceDiscoveryStrategy) Class.forName(strategy).newInstance();
-            this.discoveryStrategy.setZookeeperService(this);
-        } catch (IllegalAccessException | ClassNotFoundException | InstantiationException exception) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(exception));
-        }
-        logger.info("加载 zookeeper 配置完成");
     }
 
     @Override
@@ -127,6 +127,7 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
         try {
             return this.client.checkExists().forPath(path) != null;
         } catch (Exception e) {
+            logger.error("Error while doing exist check ", e);
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
         }
     }
@@ -134,11 +135,11 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Override
     public void deletePath(String path) {
         if (path != null && path.matches("/|/zookeeper*")) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("拒绝删除根路径或 zookeeper 系统路径"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("No root path or zookeeper system path is denied."));
         } else {
             try {
                 this.client.delete().deletingChildrenIfNeeded().forPath(path);
-                logger.debug("节点 " + path + " 删除完成");
+                logger.debug("Node " + path + " deleted");
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
             }
@@ -154,13 +155,13 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Override
     public void disconnect() {
         if (this.client != null && !this.isStopped) {
-            logger.info("正在断开 zookeeper 集群连接");
+            logger.info("Disconnecting zookeeper cluster connection");
 
             try {
                 this.zookeeperNodeCacheWatcher.getCache().close();
                 this.client.close();
                 this.isStopped = true;
-                logger.info("zookeeper 集群连接断开成功");
+                logger.info("Zookeeper cluster connection disconnected successfully");
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
             }
@@ -194,12 +195,21 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Override
     public Integer getAvailableLocalPort() {
         if (this.localPort == null) {
-            this.localPort = ServerUtil.getTomcatPortFromXmlConfig(this.getServletContext());
+            if(zookeeperConfig.containsKey("tomcat.port")){
+                logger.info("Find tomcat.port property in application.properties, use tomcat.port instead of tomcat port from server.xml");
+                try {
+                    this.localPort = Integer.parseInt(zookeeperConfig.getProperty("tomcat.port"));
+                }catch (Exception e){
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
+                }
+            } else {
+                this.localPort = ServerUtil.getTomcatPortFromXmlConfig(this.getServletContext());
+            }
             if (this.localPort == null) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("没有获取到 web 容器端口，因此无法继续"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("Unable to get the web container port, so it cannot continue."));
             }
 
-            logger.info("已确定 web 容器端口为 " + this.localPort);
+            logger.info("The port of web container has been determined " + this.localPort);
         }
 
         return this.localPort;
@@ -218,16 +228,17 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Override
     public void registerService(String path, DistributedServiceProvider distributedServiceProvider) {
         try {
-            logger.debug("正在注册 zookeeper 服务节点：path=" + path + ", data=" + distributedServiceProvider);
+            logger.debug("Registering zookeeper service node ：path=" + path + ", data=" + distributedServiceProvider);
             ((BackgroundPathAndBytesable) ((ACLBackgroundPathAndBytesable) this.client.create().creatingParentsIfNeeded().withMode(CreateMode.EPHEMERAL)).withACL(ZooDefs.Ids.OPEN_ACL_UNSAFE)).forPath(path, distributedServiceProvider.toBytes());
-            logger.debug("zookeeper 服务节点注册完成：path=" + path + ", data=" + distributedServiceProvider);
+            logger.debug("Zookeeper service node registration completed ：path=" + path + ", data=" + distributedServiceProvider);
         } catch (Exception e) {
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
         }
     }
 
     @Override
-    public List<DistributedServiceProvider> getAvailableServiceList(String path, REMOTE_SERVICE_TYPE remoteServiceType) {
+    public List<DistributedServiceProvider> getAvailableServiceList(String path, REMOTE_SERVICE_TYPE
+            remoteServiceType) {
         if (this.treeCache == null) {
             this.treeCache = (TreeCache) this.zookeeperNodeCacheWatcher.getCache();
         }
@@ -243,11 +254,11 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
                     if (data != null && data.getData() != null && data.getData().length > 0) {
                         String dataPath = data.getPath();
                         if (dataPath.startsWith(getRpcServicePath())) {
-                            providers.add(JsonUtil.json2Object(new String(data.getData(), "UTF-8"), RpcServiceProvider.class));
+                            providers.add(JsonUtil.json2Object(new String(data.getData(), StandardCharsets.UTF_8), RpcServiceProvider.class));
                         } else if (dataPath.startsWith(getHttpServicePath())) {
-                            providers.add(JsonUtil.json2Object(new String(data.getData(), "UTF-8"), HttpServiceProvider.class));
+                            providers.add(JsonUtil.json2Object(new String(data.getData(), StandardCharsets.UTF_8), HttpServiceProvider.class));
                         } else {
-                            logger.error("节点既不是RPC节点也不是HTTP节点: " + data);
+                            logger.error("Nodes are neither RPC node nor HTTP node.: " + data);
                         }
                     }
                 }
@@ -286,14 +297,14 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
         if (nodes != null && nodes.size() != 0) {
             if (nodes.size() == 1) {
                 DistributedServiceProvider provider = nodes.get(0);
-                logger.debug("请注意，" + path + " 服务的可用提供者仅一个实例（" + provider + "），可能发生单点故障");
+                logger.debug("NOTE ，" + path + " is only one instance of the available provider （" + provider + "），single point failure may occur.");
                 return provider;
             } else {
                 return this.discoveryStrategy.selectBestService(path, nodes);
             }
         } else {
-            logger.error(path + " 无可用服务提供者，请确定该服务是否还有在运行的提供者实例，或者该服务地址是否正确");
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc(path + " 无可用服务提供者，请确定该服务是否还有在运行的提供者实例，或者该服务地址是否正确"));
+            logger.error(path + " no available service provider, make sure that the service still has a running provider instance, or that the service address is correct");
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc(path + " no available service provider, make sure that the service still has a running provider instance, or that the service address is correct"));
         }
     }
 
@@ -325,6 +336,16 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     @Override
     public String getRpcServicePath() {
         return this.getRootPath() + "/rpc";
+    }
+
+    /**
+     * @since 2.0.10
+     */
+    @PreDestroy
+    public void destroy(){
+        if(client != null){
+            client.close();
+        }
     }
 
     //*************************************private********************************************
@@ -369,9 +390,9 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
                     printInfo.append("├ ").append(currPath);
                     byte[] data = treeCache.getCurrentData(currNodePath).getData();
                     if (data != null && data.length > 0) {
-                        HttpServiceProvider info = JsonUtil.json2Object(new String(data, "UTF-8"), HttpServiceProvider.class);
+                        HttpServiceProvider info = JsonUtil.json2Object(new String(data, StandardCharsets.UTF_8), HttpServiceProvider.class);
                         String registerTime = DateUtil.formatDate(info.getRegisterTime(), DateUtil.DATE_PATTERN.yyyy_MM_dd_HH_mm_ss);
-                        printInfo.append(" (注册于 ").append(registerTime).append(")");
+                        printInfo.append(" (Registered at ").append(registerTime).append(")");
                     }
                     printInfo.append("\n");
                 } else {
@@ -384,21 +405,21 @@ public class ZookeeperService extends BaseComponent implements IZookeeperService
     }
 
     private String getAvailableLocalIpByConfig() {
-        logger.info("开始根据 system.localIp 配置项获取可用 ip");
+        logger.info("Get available IP from the system.localIp configuration item.");
         String ipPattern = this.zookeeperConfig.getProperty("system.localIp");
         Map<String, String> ipList = NetUtil.getAvailableIp();
-        logger.info("当前主机的可用 ip 列表为：" + ipList);
+        logger.info("The available IP list for the current host is：" + ipList);
         Map<String, String> result = NetUtil.getAvailableIp(ipPattern);
         if (result != null && result.size() != 0) {
             if (result.size() > 1) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("找到多个可用 ip（" + result + "），因此无法继续，可能原因为 system.localIp 正则配置错误（" + ipPattern + "），导致在可用 ip 列表中匹配到了多个，请检查"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("Multiple available IPS ("+result+") were found, and therefore could not continue, possibly due to a system.localIP regular configuration error（" + ipPattern + "），resulting in more than one match in the available IP list, please check"));
             } else {
                 Map.Entry<String, String> targetIp = result.entrySet().iterator().next();
-                logger.info("已确定可用 ip 为 " + targetIp.getKey() + "（" + targetIp.getValue() + "）");
+                logger.info("IP has been determined to be " + targetIp.getKey() + "（" + targetIp.getValue() + "）");
                 return targetIp.getKey();
             }
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("没有匹配到可用 ip，当前主机的所有可用 ip 列表为 " + (ipList != null && !ipList.isEmpty() ? ipList.keySet() : "{}") + "，" + "可能原因为 system.localIp 配置错误（当前配置为 " + ipPattern + "）：" + "1.ip 配置错误，没有包含在当前主机的可用 ip 列表中；" + "2.ip 正则配置错误，因此在所有可用 ip 列表中没有匹配到对象"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("No matching to available IP, all available IP lists for the current host are " + (ipList != null && !ipList.isEmpty() ? ipList.keySet() : "{}") + "，" + "possible cause is system.localIp configuration error（current configuration is " + ipPattern + "）：1.IP configuration error is not included in the available IP list of the current host；2.IP regular configuration error, so there is no match to objects in all available IP lists."));
         }
     }
 

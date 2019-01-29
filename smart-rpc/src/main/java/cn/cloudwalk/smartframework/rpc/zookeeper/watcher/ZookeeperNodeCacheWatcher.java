@@ -10,6 +10,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PreDestroy;
 import java.io.Closeable;
 
 /**
@@ -26,11 +27,11 @@ public class ZookeeperNodeCacheWatcher extends BaseComponent implements IZookeep
 
     @Override
     public void watch(Closeable client, String path) {
-        logger.info("开始启动 zookeeper watcher（path=" + path + "）");
+        logger.info("start zookeeper watcher（path=" + path + "）");
         this.cache = new TreeCache((CuratorFramework) client, path);
         try {
             this.cache.start();
-            logger.info("zookeeper watcher 启动成功");
+            logger.info("zookeeper watcher started");
         } catch (Exception var4) {
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(var4));
         }
@@ -39,6 +40,16 @@ public class ZookeeperNodeCacheWatcher extends BaseComponent implements IZookeep
     @Override
     public TreeCache getCache() {
         return this.cache;
+    }
+
+    /**
+     * @since 2.0.10
+     */
+    @PreDestroy
+    public void destroy(){
+        if(cache != null){
+            cache.close();
+        }
     }
 
 }

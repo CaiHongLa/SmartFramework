@@ -34,7 +34,7 @@ public class FileUtil {
         try {
             Resource resource = new FileSystemResource(filePath);
             if (!resource.exists()) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("没有找到配置文件 " + filePath + "，请确认该文件是否存在"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("can not found " + filePath + "，please make sure file exist"));
             }
             is = resource.getInputStream();
             Properties properties = new Properties();
@@ -46,14 +46,14 @@ public class FileUtil {
             }
             return properties;
         } catch (Exception e) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("加载 " + filePath + " 时出错，请确认文件是否存在或者是否为标准的 properties 或 xml 文件", e));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("error while load  " + filePath + "，please make sure file is properties or xml", e));
         } finally {
             try {
                 if (is != null) {
                     is.close();
                 }
             } catch (Exception e) {
-                logger.error("关闭文件流异常！" + e);
+                logger.error("close file stream error！" + e);
             }
         }
     }
@@ -72,14 +72,14 @@ public class FileUtil {
             }
             return properties;
         } catch (IOException e) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("加载类路径下的 " + fileName + " 时出错，请确认文件是否存在或者是否为标准的 properties 或 xml 文件", e));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("error while load  " + fileName + "，please make sure file is properties or xml", e));
         } finally {
             try {
                 if (is != null) {
                     is.close();
                 }
             } catch (Exception e) {
-                logger.error("关闭文件流异常！" + e);
+                logger.error("close file stream error！" + e);
             }
         }
     }
@@ -92,7 +92,7 @@ public class FileUtil {
             if (isFileExist(path)) {
                 return loadProperties(path);
             } else {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("classpath 下以及 config 目录下均没有找到配置文件 " + fileName + "，请确认其是否存在"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("can not found file "  + fileName + "under classpath or config path ，please make sure file exist"));
             }
         }
     }
@@ -100,7 +100,7 @@ public class FileUtil {
     public static InputStream loadClassPathResourceAsStream(String fileName) {
         Resource resource = new ClassPathResource(fileName);
         if (!resource.exists()) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("加载类路径下的文件 " + fileName + " 时出错，因为不存在该文件"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("error while load classpath file  " + fileName + " for file not found"));
         } else {
             try {
                 return resource.getInputStream();
@@ -122,7 +122,7 @@ public class FileUtil {
                     throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
                 }
             } else {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("classpath 下以及 config 目录下均没有找到配置文件 " + fileName + "，请确认其是否存在"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("can not found file "  + fileName + "under classpath or config path ，please make sure file exist"));
             }
         }
     }
@@ -172,7 +172,7 @@ public class FileUtil {
                     br.close();
                 }
             } catch (Exception e) {
-                logger.error("关闭文件读取流异常！" + e);
+                logger.error("close file stream error！" + e);
             }
 
         }
@@ -202,7 +202,7 @@ public class FileUtil {
                     is.close();
                 }
             } catch (Exception e) {
-                logger.error("关闭文件流异常！" + e);
+                logger.error("close file stream error ！" + e);
             }
 
         }
@@ -229,7 +229,7 @@ public class FileUtil {
                     is.close();
                 }
             } catch (Exception e) {
-                logger.error("关闭文件流异常！" + e);
+                logger.error("close file stream error！" + e);
             }
 
         }
@@ -282,7 +282,7 @@ public class FileUtil {
                 }
             });
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("目录不存在"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("path not exist"));
         }
     }
 
@@ -324,12 +324,12 @@ public class FileUtil {
     public static boolean copy(String sourceFilePath, String newFilePath) {
         File srcFile = new File(sourceFilePath);
         if (!srcFile.exists()) {
-            logger.error("没有发现待复制的源文件", new FileNotFoundException("没有发现待复制的源文件"));
+            logger.error("sourceFilePath not exist", new FileNotFoundException("sourceFilePath not exist"));
             return false;
         } else {
             File newFile = new File(newFilePath);
             if (newFile.exists()) {
-                logger.error("目标文件已存在", new FrameworkInternalSystemException(new SystemExceptionDesc("目标文件已存在")));
+                logger.error("dest file exist", new FrameworkInternalSystemException(new SystemExceptionDesc("dest file exist")));
                 return false;
             } else {
                 InputStream is = null;
@@ -356,7 +356,7 @@ public class FileUtil {
                         try {
                             os.close();
                         } catch (IOException e) {
-                            logger.error("关闭文件写出流异常！" + e);
+                            logger.error("close file write out stream error！" + e);
                         }
                     }
 
@@ -364,7 +364,7 @@ public class FileUtil {
                         try {
                             is.close();
                         } catch (IOException e) {
-                            logger.error("关闭文件写入流异常！" + e);
+                            logger.error("close file write in stream error！" + e);
                         }
                     }
 
@@ -422,7 +422,7 @@ public class FileUtil {
                     fileOutputStream.close();
                 }
             } catch (Exception e) {
-                logger.error("关闭文件写出流异常！" + e);
+                logger.error("close file write out stream error！" + e);
             }
 
         }
@@ -436,7 +436,7 @@ public class FileUtil {
         for (String file : files) {
             f = new File(file);
             if (!f.exists()) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("找不到文件 " + f));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("file not found " + f));
             }
 
             _files.add(f);
@@ -452,7 +452,7 @@ public class FileUtil {
     public static void packFiles(String scanPath, String outputFile) {
         File dir = new File(scanPath);
         if (!dir.isDirectory()) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("不是目录"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("not directory"));
         } else {
             File[] files = dir.listFiles();
             if (files != null) {

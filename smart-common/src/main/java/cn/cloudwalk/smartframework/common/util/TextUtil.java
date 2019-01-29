@@ -30,7 +30,28 @@ public class TextUtil {
         } else if (returnType == Double.class) {
             return (T) Double.valueOf(rs);
         } else {
-            throw new RuntimeException("不支持的返回类型");
+            throw new RuntimeException("not support returnType");
+        }
+    }
+
+    public static String join(Object[] target, String separator) {
+        if(isEmpty(separator)){
+            return null;
+        }
+        if (target == null) {
+            return null;
+        } else {
+            StringBuilder sb = new StringBuilder();
+            if (target.length > 0) {
+                sb.append(target[0]);
+
+                for(int i = 1; i < target.length; ++i) {
+                    sb.append(separator);
+                    sb.append(target[i]);
+                }
+            }
+
+            return sb.toString();
         }
     }
 

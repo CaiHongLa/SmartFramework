@@ -35,24 +35,24 @@ public class SSLConfigUtil {
 
     static {
         if (isConfiguredHttps()) {
-            logger.info("开始初始化 system.https.sslStrategy 策略");
+            logger.info("init system.https.sslStrategy policy");
             if (!applicationCfg.containsKey("system.https.sslStrategy")) {
-                logger.info("application.properties 配置文件中没有找到 system.https.sslStrategy 策略配置项，因此将默认使用 cn.cloudwalk.smartframework.common.util.http.ssl.DefaultSSLStrategy");
+                logger.info("application.properties not config system.https.sslStrategy，use default cn.cloudwalk.smartframework.common.util.http.ssl.DefaultSSLStrategy");
             }
 
             String strategyClass = applicationCfg.getProperty("system.https.sslStrategy", "cn.cloudwalk.smartframework.common.util.http.ssl.DefaultSSLStrategy");
             if (TextUtil.isEmpty(strategyClass)) {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("无效的 system.https.sslStrategy 配置值：" + strategyClass));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("error system.https.sslStrategy config：" + strategyClass));
             }
 
             try {
                 Object obj = Class.forName(strategyClass).newInstance();
                 if (!(obj instanceof ISSLStrategy)) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("无效的 system.https.sslStrategy 配置，策略类必须为 " + ISSLStrategy.class.getName() + " 的实现类，但配置的是 " + strategyClass));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("error system.https.sslStrategy config，strategy must be the impl class of " + ISSLStrategy.class.getName() + "，but now is  " + strategyClass));
                 }
 
                 strategy = (ISSLStrategy) obj;
-                logger.info("初始化 system.https.sslStrategy 策略完成，策略类为 " + strategyClass);
+                logger.info("system.https.sslStrategy init completed，strategy is " + strategyClass);
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
             }
@@ -81,7 +81,7 @@ public class SSLConfigUtil {
         if (SKIP.equals(certName)) {
             return buildTrustSSLContext();
         } else if (isConfiguredHttps()) {
-            logger.info("开始构建 SSLContext 对象（certName=" + certName + "）");
+            logger.info("build SSLContext with（certName=" + certName + "）");
             String certPath = applicationCfg.getProperty("system.https.certBasePath") + File.separator + certName + File.separator;
             String keyStorePasswordText = FileUtil.loadResourceAsTextOnClassPathOrConfigDir(certPath + "person-client.pass");
             String trustKeyStorePasswordText = FileUtil.loadResourceAsTextOnClassPathOrConfigDir(certPath + "cloudwalk-truststore.pass");
@@ -96,13 +96,13 @@ public class SSLConfigUtil {
                 }
 
                 SSLContext ctx = SSLContexts.custom().useProtocol("TLS").loadKeyMaterial(keyStore, keyStorePasswordText.toCharArray()).loadTrustMaterial(trustStore, new TrustSelfSignedStrategy()).build();
-                logger.info("SSLContext 对象构建完成（certName=" + certName + "）");
+                logger.info("SSLContext build completed with（certName=" + certName + "）");
                 return ctx;
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
             }
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("配置错误：application.properties 配置文件中没有指定 https 证书基路径（system.https.certBasePath），因此 SSLContext 构建失败"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("CONFIG ERROR：application.properties not config https cert base path （system.https.certBasePath），SSLContext build failed"));
         }
     }
 

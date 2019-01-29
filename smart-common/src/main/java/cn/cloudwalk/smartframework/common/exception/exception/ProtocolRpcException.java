@@ -19,6 +19,6 @@ public class ProtocolRpcException extends ProtocolException {
 
     @Override
     public String defShortName() {
-        return "协议通信异常";
+        return "Protocol Rpc Exception";
     }
 }

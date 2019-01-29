@@ -26,7 +26,7 @@ public class JPAUtil {
         if (table != null) {
             return table.name();
         } else {
-            throw new DomainDefinitionException(new SystemExceptionDesc("domain（" + cls.getName() + "） 定义异常，缺少 @Table 定义"));
+            throw new DomainDefinitionException(new SystemExceptionDesc("domain（" + cls.getName() + "） define error，lose @Table define"));
         }
     }
 
@@ -48,7 +48,7 @@ public class JPAUtil {
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
         }
 
-        throw new DomainDefinitionException(new SystemExceptionDesc("domain（" + cls.getName() + "） 定义异常，缺少 @Id 定义"));
+        throw new DomainDefinitionException(new SystemExceptionDesc("domain（" + cls.getName() + "） define error，lose @Id define"));
     }
 
     public static String getOriginalPKName(Class<? extends BaseDomain> cls) {
@@ -68,7 +68,7 @@ public class JPAUtil {
             } else if (result instanceof Serializable) {
                 return (Serializable) result;
             } else {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("主键必须属于 Serializable"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("primary key must be impl of Serializable"));
             }
         } catch (Exception e) {
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
@@ -138,7 +138,7 @@ public class JPAUtil {
 
     private static void checkIsExtendFromBaseDomain(Class<? extends BaseDomain> cls) {
         if (cls.getSuperclass() != BaseDomain.class) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("实体必须直接继承自 BaseDomain"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("domain must be sub class of BaseDomain"));
         }
     }
 

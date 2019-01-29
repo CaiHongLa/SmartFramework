@@ -27,7 +27,7 @@ import java.util.concurrent.ConcurrentMap;
 public class NettySslConfigUtil {
 
     private static final String CONFIG_NAME = "application.properties";
-    private static final String CERT_PATH = "netty.ssl.cert";
+    private static final String CERT_PATH = "client.ssl.cert";
     private static Logger logger = LogManager.getLogger(NettySslConfigUtil.class);
     private static Properties applicationCfg = PropertiesUtil.loadPropertiesOnClassPathOrConfigDir(CONFIG_NAME);
     private static ConcurrentMap<String, SSLContext> context = new ConcurrentHashMap<>();
@@ -57,7 +57,7 @@ public class NettySslConfigUtil {
                 tmf.init(tks);
                 SSLContext serverContext = SSLContext.getInstance(PROTOCOL);
                 serverContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
-                logger.info("Ssl Server Context 对象构建完成（certName=" + certName + "）");
+                logger.info("Ssl Server Context build completed with （certName=" + certName + "）");
                 return serverContext;
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
@@ -83,7 +83,7 @@ public class NettySslConfigUtil {
                 tmf2.init(tks2);
                 clientContext = SSLContext.getInstance(PROTOCOL);
                 clientContext.init(kmf2.getKeyManagers(), tmf2.getTrustManagers(), null);
-                logger.info("Ssl Client Context 对象构建完成（certName=" + certName + "）");
+                logger.info("Ssl Client Context build completed with （certName=" + certName + "）");
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
             }

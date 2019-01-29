@@ -25,11 +25,11 @@ public class ProxyConfigUtil {
 
     static {
         Properties applicationCfg = PropertiesUtil.loadClassPathProperties(CONFIG_NAME);
-        logger.info("开始初始化代理配置，配置信息为 " + applicationCfg);
+        logger.info("init proxy config, " + applicationCfg);
         if (applicationCfg.containsKey("system.http.proxy.use")) {
             isUse = Boolean.valueOf(applicationCfg.getProperty("system.http.proxy.use"));
             if (!isUse) {
-                logger.info("注意：application.properties 中配置了 system.http.proxy.use=false，因此 http proxy 功能被关闭，所有试图使用 http proxy 的功能都将会出错");
+                logger.info("WARN：application.properties config system.http.proxy.use=false，so http proxy will not be used， http proxy function will be error" );
             } else {
                 String ip = applicationCfg.getProperty("system.http.proxy.ip");
                 Integer port = Integer.valueOf(applicationCfg.getProperty("system.http.proxy.port"));
@@ -40,12 +40,10 @@ public class ProxyConfigUtil {
                 config = RequestConfig.custom().setProxy(new HttpHost(ip, port)).setSocketTimeout(HttpBaseSupportUtil.getIntParam("soTimeout", 180000)).build();
             }
 
-            logger.info("代理配置初始化完成");
+            logger.info("proxy init completed");
         } else {
-            logger.warn("注意：application.properties 配置文件中没有配置 proxy，因此所有试图使用 http proxy 的功能都将会出错");
+            logger.warn("WARN：application.properties not config proxy， http proxy function will be error");
         }
-
-        logger.info("代理配置初始化完成");
     }
 
     public ProxyConfigUtil() {

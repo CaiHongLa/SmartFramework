@@ -7,6 +7,8 @@ import cn.cloudwalk.smartframework.common.util.http.HttpBaseSupportUtil;
 import cn.cloudwalk.smartframework.common.util.http.HttpDownloadListener;
 import cn.cloudwalk.smartframework.common.util.http.async.AsyncCallback;
 import cn.cloudwalk.smartframework.common.util.http.async.AsyncExecuteResult;
+import cn.cloudwalk.smartframework.common.util.http.async.AsyncRpcCallBack;
+import cn.cloudwalk.smartframework.common.util.http.async.AsyncRpcExecuteResult;
 import cn.cloudwalk.smartframework.common.util.http.bean.HTTP_CONTENT_TRANSFER_TYPE;
 import cn.cloudwalk.smartframework.common.util.http.bean.HTTP_METHOD;
 import cn.cloudwalk.smartframework.common.util.http.bean.HttpErrorDetail;
@@ -177,7 +179,7 @@ public class HttpUtil {
                     try {
                         response.close();
                     } catch (IOException e) {
-                        logger.error("关闭Http流异常！" + e);
+                        logger.error("close http stream error！" + e);
                     }
                 }
             }
@@ -253,11 +255,11 @@ public class HttpUtil {
             ResponseHandler<T> handler = response -> {
                 HttpEntity entity = response.getEntity();
                 if (entity == null) {
-                    throw new ErrorHttpStatusException(new SystemExceptionDesc("响应内容为空"));
+                    throw new ErrorHttpStatusException(new SystemExceptionDesc("response is null"));
                 } else {
                     HttpStatus statusCode = HttpStatus.valueOf(response.getStatusLine().getStatusCode());
                     if (!statusCode.is2xxSuccessful() && !statusCode.is3xxRedirection()) {
-                        throw new ErrorHttpStatusException(new SystemExceptionDesc("错误的 HTTP 状态（statusLine=" + response.getStatusLine() + ", url=" + url + "）"));
+                        throw new ErrorHttpStatusException(new SystemExceptionDesc("error HTTP status（statusLine=" + response.getStatusLine() + ", url=" + url + "）"));
                     } else {
                         ContentType contentType = ContentType.getOrDefault(entity);
                         Charset charset = contentType.getCharset();
@@ -338,6 +340,11 @@ public class HttpUtil {
             return request(request, false, null, callback);
         }
 
+        public static AsyncRpcExecuteResult postRpc(HttpRequest request, AsyncRpcCallBack callback) {
+            request.setMethod(HTTP_METHOD.POST);
+            return requestRpc(Collections.singletonList(request), false, null, callback);
+        }
+
         public static AsyncExecuteResult request(List<HttpRequest> requestList, boolean proxy, AsyncCallback callback) {
             return request(requestList, proxy, null, callback);
         }
@@ -368,7 +375,7 @@ public class HttpUtil {
                             String responseText = HttpBaseSupportUtil.getResponseText(response);
                             metadata.setResponse(responseText);
                             if (!statusCode.is2xxSuccessful() && !statusCode.is3xxRedirection()) {
-                                ErrorHttpStatusException exception = new ErrorHttpStatusException(new SystemExceptionDesc("错误的 http status 状态（statusCode=" + statusCode + ", url=" + metadata.getUrl() + "）"));
+                                ErrorHttpStatusException exception = new ErrorHttpStatusException(new SystemExceptionDesc("error http status （statusCode=" + statusCode + ", url=" + metadata.getUrl() + "）"));
                                 callback.onError(exception, metadata);
                                 executeResult.addError(metadata.getCode(), new HttpErrorDetail(metadata, exception));
                             } else {
@@ -376,7 +383,7 @@ public class HttpUtil {
                                 executeResult.addResult(metadata.getCode(), new cn.cloudwalk.smartframework.common.util.http.bean.HttpResponse(responseText, response.getStatusLine(), metadata));
                             }
                         } catch (Exception e) {
-                            logger.error("捕获到 http client 回调函数异常 " + e);
+                            logger.error("cached http client callback error " + e);
                         } finally {
                             countDownLatch.countDown();
                         }
@@ -391,7 +398,7 @@ public class HttpUtil {
                             callback.onError(ex, metadata);
                             executeResult.addError(metadata.getCode(), new HttpErrorDetail(metadata, ex));
                         } catch (Exception e) {
-                            logger.error("捕获到 http client 回调函数异常 " + e);
+                            logger.error("cached http client callback error " + e);
                         } finally {
                             countDownLatch.countDown();
                         }
@@ -405,7 +412,7 @@ public class HttpUtil {
                             callback.onProgressChange(total - countDownLatch.getCount() - 1L, (long) total);
                             callback.onCancel(metadata);
                         } catch (Exception e) {
-                            logger.error("捕获到 http client 回调函数异常 " + e);
+                            logger.error("cached http client callback error " + e);
                         } finally {
                             countDownLatch.countDown();
                         }
@@ -418,6 +425,76 @@ public class HttpUtil {
                 countDownLatch.await();
                 callback.onEnd(requestList);
                 return executeResult;
+            } catch (Exception e) {
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
+            }
+        }
+
+        public static AsyncRpcExecuteResult requestRpc(List<HttpRequest> requestList, boolean proxy, RequestConfig requestConfig, final AsyncRpcCallBack callback) {
+            HttpBaseSupportUtil.checkRequestCodeConfig(requestList);
+            final AsyncRpcExecuteResult executeRpcResult = new AsyncRpcExecuteResult();
+            final CountDownLatch countDownLatch = new CountDownLatch(requestList.size());
+
+            for (HttpRequest metadata : requestList) {
+                final HttpRequestBase request;
+                if (metadata.getMethod() == HTTP_METHOD.GET) {
+                    request = HttpBaseSupportUtil.buildHttpGet(metadata.getUrl(), metadata.getParams(), metadata.getHeaders(), proxy, requestConfig);
+                } else {
+                    request = HttpBaseSupportUtil.buildHttpPost(metadata.getUrl(), metadata.getParams(), metadata.getHeaders(), metadata.getTransferType(), proxy, requestConfig);
+                }
+
+                CloseableHttpAsyncClient currClient = HttpBaseSupportUtil.getOrCreateAsyncHttpClient(metadata.getUrl(), metadata.getParams(), proxy);
+                currClient.execute(request, new FutureCallback<HttpResponse>() {
+                    @Override
+                    public void completed(HttpResponse response) {
+                        try {
+                            request.releaseConnection();
+                            HttpStatus statusCode = HttpStatus.valueOf(response.getStatusLine().getStatusCode());
+                            byte[] data = HttpBaseSupportUtil.getResponseByte(response);
+                            if (!statusCode.is2xxSuccessful() && !statusCode.is3xxRedirection()) {
+                                ErrorHttpStatusException exception = new ErrorHttpStatusException(new SystemExceptionDesc("error http status （statusCode=" + statusCode + ", url=" + metadata.getUrl() + "）"));
+                                callback.onError(exception, metadata);
+                                executeRpcResult.addError(metadata.getCode(), new HttpErrorDetail(metadata, exception));
+                            } else {
+                                callback.onComplete(data, metadata, response.getStatusLine());
+                                executeRpcResult.addResult(metadata.getCode(), data);
+                            }
+                        } catch (Exception e) {
+                            logger.error("cached http client callback error " + e);
+                        } finally {
+                            countDownLatch.countDown();
+                        }
+                    }
+
+                    @Override
+                    public void failed(Exception ex) {
+                        try {
+                            request.releaseConnection();
+                            callback.onError(ex, metadata);
+                            executeRpcResult.addError(metadata.getCode(), new HttpErrorDetail(metadata, ex));
+                        } catch (Exception e) {
+                            logger.error("cached http client callback error " + e);
+                        } finally {
+                            countDownLatch.countDown();
+                        }
+                    }
+
+                    @Override
+                    public void cancelled() {
+                        try {
+                            request.releaseConnection();
+                        } catch (Exception e) {
+                            logger.error("cached http client callback error " + e);
+                        } finally {
+                            countDownLatch.countDown();
+                        }
+                    }
+                });
+            }
+
+            try {
+                countDownLatch.await();
+                return executeRpcResult;
             } catch (Exception e) {
                 throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
             }

@@ -81,7 +81,7 @@ public class ReflectUtil {
             if (method != null) {
                 method.invoke(instance, propertyValue);
             } else {
-                throw new FrameworkInternalSystemException(new SystemExceptionDesc("此 bean 缺少 getter 方法"));
+                throw new FrameworkInternalSystemException(new SystemExceptionDesc("bean have not setter method"));
             }
         } catch (Exception e) {
             throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
@@ -216,4 +216,53 @@ public class ReflectUtil {
         map.remove("class");
         return map;
     }
+
+    public static Class<?> getClassType(Object obj) {
+        Class<?> classType = obj.getClass();
+        String typeName = classType.getName();
+        switch (typeName) {
+            case "java.lang.Integer":
+                return Integer.TYPE;
+            case "java.lang.Long":
+                return Long.TYPE;
+            case "java.lang.Float":
+                return Float.TYPE;
+            case "java.lang.Double":
+                return Double.TYPE;
+            case "java.lang.Character":
+                return Character.TYPE;
+            case "java.lang.Boolean":
+                return Boolean.TYPE;
+            case "java.lang.Short":
+                return Short.TYPE;
+            case "java.lang.Byte":
+                return Byte.TYPE;
+            default:
+                return classType;
+        }
+    }
+
+    public static Class<?> getClassType(String className) throws ClassNotFoundException {
+        switch (className) {
+            case "int":
+                return Integer.class;
+            case "long":
+                return Long.class;
+            case "float":
+                return Float.class;
+            case "double":
+                return Double.class;
+            case "char":
+                return Character.class;
+            case "boolean":
+                return Boolean.class;
+            case "short":
+                return Short.class;
+            case "byte":
+                return Byte.class;
+            default:
+                return Class.forName(className);
+        }
+    }
+
 }

@@ -12,6 +12,6 @@ public class StandardBusinessException extends BusinessException {
 
     @Override
     public String defShortName() {
-        return "标准业务异常";
+        return "Standard Business Exception";
     }
 }

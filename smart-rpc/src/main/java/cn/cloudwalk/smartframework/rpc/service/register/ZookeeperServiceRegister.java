@@ -5,11 +5,12 @@ import cn.cloudwalk.smartframework.common.distributed.IZookeeperRegister;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
 import cn.cloudwalk.smartframework.common.distributed.provider.HttpServiceProvider;
 import cn.cloudwalk.smartframework.common.distributed.provider.RpcServiceProvider;
+import cn.cloudwalk.smartframework.common.util.TextUtil;
 import cn.cloudwalk.smartframework.rpc.bean.PublicHttpServiceVO;
 import cn.cloudwalk.smartframework.rpc.bean.PublicRpcServiceVO;
-import cn.cloudwalk.smartframework.rpc.netty.INettyRpcService;
+import cn.cloudwalk.smartframework.rpc.client.service.INettyRpcService;
 import cn.cloudwalk.smartframework.rpc.service.holder.IPublicServiceHolder;
-import cn.cloudwalk.smartframework.transport.Server;
+import cn.cloudwalk.smartframework.transportcomponents.Server;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,13 +49,13 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
         List<PublicHttpServiceVO> httpServiceVOS = this.publicServiceHolder.getAllHttpService();
         List<PublicRpcServiceVO> rpcServiceVOS = publicServiceHolder.getAllRpcService();
         if (rpcServiceVOS.isEmpty() && httpServiceVOS.isEmpty()) {
-            logger.info("没有待注册的 zookeeper 服务，如果您确信有，请确认已添加 @PublicHttpService 或 @PublicRpcService 注解");
+            logger.info("There is no zookeeper service to be registered, and if you are sure, make sure you have added the @PublicHttpService or @PublicRpcService annotation");
             return;
         }
 
         ServletContext context = getServletContext();
-        if(null == context){
-            logger.error("注意：当前应用没有部署在Servlet容器，因此所有的Http服务都将不进行注册！");
+        if (null == context) {
+            logger.error("Note: The current application is not deployed in the Servlet container, so all Http services will not be registered!");
         }
 
         Properties config = this.zookeeperService.getZookeeperConfig();
@@ -64,9 +65,9 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
         if (!rpcServiceVOS.isEmpty()) {
             String rpcServiceRootPath = this.zookeeperService.getRpcServicePath();
             String rpcRootPath = rpcServiceRootPath + "/" + zookeeperId + "/";
-            Integer rpcPort = nettyRpcService.getHttpRpcPort();
+            Integer rpcPort = nettyRpcService.getRpcPort();
             String rpcProviderPath = "/provider-" + localIp + ":" + rpcPort;
-            Server server = nettyRpcService.getNettyRpcServer();
+            Server server = nettyRpcService.getRpcServer();
             if (server == null || server.isClosed()) {
                 nettyRpcService.start();
                 registerRpcService(rpcServiceVOS, rpcRootPath, rpcProviderPath, zookeeperId, localIp, rpcPort);
@@ -76,7 +77,7 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
         }
 
         if (!httpServiceVOS.isEmpty() && null != context) {
-            logger.info("开始注册 Http 服务，共 " + httpServiceVOS.size() + " 个：" + httpServiceVOS);
+            logger.info("registering Http services, a total of " + httpServiceVOS.size() + " , they are " + httpServiceVOS);
             Integer httpPort = zookeeperService.getAvailableLocalPort();
             String httpProviderPath = "/provider-" + localIp + ":" + httpPort;
             String httpServiceRootPath = this.zookeeperService.getHttpServicePath();
@@ -87,14 +88,10 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
                 if (controllerMappingName != null && controllerMappingName.length > 0) {
                     for (String controllerMapping : controllerMappingName) {
                         String[] methodMappingName = httpServiceVO.getMethodMappingName();
-                        if (controllerMapping.startsWith("/")) {
-                            controllerMapping = controllerMapping.substring(1);
-                        }
+                        controllerMapping = formatRequestMapping(controllerMapping);
                         for (String methodMapping : methodMappingName) {
-                            if (!methodMapping.startsWith("/")) {
-                                methodMapping = "/" + methodMapping;
-                            }
-                            String userPath = controllerMapping + methodMapping;
+                            methodMapping = formatRequestMapping(methodMapping);
+                            String userPath = controllerMapping + "/" + methodMapping;
                             String nodePath = httpRootPath + userPath + httpProviderPath;
                             this.registerHttpServiceProvider(nodePath, controllerMapping, methodMapping, zookeeperId, localIp, httpPort);
                         }
@@ -102,30 +99,28 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
                 } else {
                     String[] methodMappingName = httpServiceVO.getMethodMappingName();
                     for (String methodMapping : methodMappingName) {
-                        if (methodMapping.startsWith("/")) {
-                            methodMapping = methodMapping.substring(1);
-                        }
+                        methodMapping = formatRequestMapping(methodMapping);
                         String nodePath = httpRootPath + methodMapping + httpProviderPath;
                         this.registerHttpServiceProvider(nodePath, null, methodMapping, zookeeperId, localIp, httpPort);
                     }
                 }
             }
-            logger.info("所有 Http 服务注册完成");
-            logger.info("目前Zookeeper服务树如下：\n" + zookeeperService.getTreeInfoAsString(zookeeperService.getRootPath()));
+            logger.info("All Http services are registered.");
+            logger.info("At present, the Zookeeper service tree is as follows：\n" + zookeeperService.getTreeInfoAsString(zookeeperService.getRootPath()));
         }
     }
 
     private void registerRpcService(List<PublicRpcServiceVO> rpcServiceVOS, String rpcRootPath, String rpcProviderPath,
                                     String zookeeperId, String localIp, Integer localPort) {
-        logger.info("开始注册 Netty Rpc 服务，共 " + rpcServiceVOS.size() + " 个：" + rpcServiceVOS);
+        logger.info("registering Rpc services，a total of " + rpcServiceVOS.size() + " ,they are" + rpcServiceVOS);
         for (PublicRpcServiceVO rpcServiceVO : rpcServiceVOS) {
             String className = rpcServiceVO.getClassName();
             className = className.replace(".", "/");
             String nodePath = rpcRootPath + className + rpcProviderPath;
             registerRpcServiceProvider(nodePath, className, zookeeperId, localIp, localPort);
         }
-        logger.info("所有 Netty Rpc 服务注册完成");
-        logger.info("目前Zookeeper服务树如下：\n" + zookeeperService.getTreeInfoAsString(zookeeperService.getRootPath()));
+        logger.info("All rpc services are registered.");
+        logger.info("At present, the Zookeeper service tree is as follows：\n" + zookeeperService.getTreeInfoAsString(zookeeperService.getRootPath()));
     }
 
     private void registerHttpServiceProvider(String registerPath, String controllerMapping, String methodMapping,
@@ -156,10 +151,24 @@ public class ZookeeperServiceRegister extends BaseComponent implements IZookeepe
         this.zookeeperService.registerService(registerPath, node);
     }
 
+    private String formatRequestMapping(String requestMapping) {
+        if (TextUtil.isEmpty(requestMapping)) {
+            throw new IllegalArgumentException("requestMapping is null");
+        }
+        String copy = requestMapping;
+        if (copy.startsWith("/")) {
+            copy = copy.substring(1);
+        }
+        if (copy.endsWith("/")) {
+            copy = copy.substring(0, copy.length() - 1);
+        }
+        return copy;
+    }
+
     private void deleteExistPath(String registerPath) {
         if (this.zookeeperService.existPath(registerPath)) {
             this.zookeeperService.deletePath(registerPath);
-            logger.info("zookeeper 服务节点（" + registerPath + "）已存在，将重新注册该节点，可能原因是服务组件的频繁重启或网络频繁中断，请注意观察服务组件以及网络的状况");
+            logger.info("zookeeper node（" + registerPath + "）exist，this node will be re-registered, possibly due to frequent restarts of the service component or frequent network interruptions. Note the status of the service component and the network");
         }
     }
 

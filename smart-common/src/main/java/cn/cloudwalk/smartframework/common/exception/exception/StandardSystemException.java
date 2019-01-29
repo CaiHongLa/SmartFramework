@@ -12,6 +12,6 @@ public class StandardSystemException extends SystemException {
 
     @Override
     public String defShortName() {
-        return "标准系统异常";
+        return "Standard System Exception";
     }
 }

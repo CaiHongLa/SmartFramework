@@ -13,6 +13,6 @@ public class ErrorHttpStatusException extends HttpException {
 
     @Override
     public String defShortName() {
-        return "http 状态异常";
+        return "http status exception";
     }
 }

@@ -15,7 +15,7 @@ public class DataSourceUtil {
 
     public static void register(String beanName, Map<String, Object> properties, DATA_SOURCE_TYPE dataSourceType, ApplicationContext context) {
         if (context.containsBean(beanName)) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("数据源 " + beanName + " 已存在，不能重复注册"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("data source " + beanName + " exist"));
         } else {
             DefaultListableBeanFactory factory = (DefaultListableBeanFactory) context.getAutowireCapableBeanFactory();
             BeanDefinitionBuilder builder = BeanDefinitionBuilder.rootBeanDefinition(dataSourceType.getClassName());

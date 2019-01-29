@@ -1,7 +1,6 @@
 package cn.cloudwalk.smartframework.core.dao.datasource;
 
 import cn.cloudwalk.smartframework.common.BaseComponent;
-import cn.cloudwalk.smartframework.common.IConfigurationService;
 import cn.cloudwalk.smartframework.common.exception.desc.impl.SystemExceptionDesc;
 import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalSystemException;
 import com.mchange.v2.c3p0.ComboPooledDataSource;
@@ -39,9 +38,6 @@ public class DataSourceHolder extends BaseComponent {
     @Qualifier("dataSource")
     private DynamicDataSource dataSource;
 
-    @Autowired(required = false)
-    private IConfigurationService configurationService;
-
     private IDataSourceStrategy dataSourceStrategy;
 
     public static void change(String key) {
@@ -58,19 +54,16 @@ public class DataSourceHolder extends BaseComponent {
 
     @PostConstruct
     public void checkStrategy() {
-        if (null == configurationService) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("IConfigurationService服务不可用，请导入Config组件！"));
-        }
-        Properties jdbc = configurationService.getApplicationCfg();
+        Properties jdbc = getConfigurationService().getApplicationCfg();
         if (!jdbc.containsKey("ds.strategy")) {
             dataSourceStrategy = new DefaultMasterStrategy();
-            logger.warn("没有指定 ds.strategy，已自动启用 " + this.dataSourceStrategy.getClass().getName());
+            logger.warn("not config ds.strategy，use " + this.dataSourceStrategy.getClass().getName());
         } else {
             try {
                 String className = jdbc.getProperty("ds.strategy").trim();
                 Object obj = Class.forName(className).newInstance();
                 if (!(obj instanceof IDataSourceStrategy)) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("类名（" + className + "）错误，或没有实现自 IDataSourceStrategy，或没有继承自 DataSourceStrategyAdapter"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("ds.strategy （" + className + "） error，not impl of IDataSourceStrategy or not extends from DataSourceStrategyAdapter"));
                 }
 
                 dataSourceStrategy = (IDataSourceStrategy) obj;
@@ -147,7 +140,7 @@ public class DataSourceHolder extends BaseComponent {
         try {
             Set<String> dsNames = getLoadedDataSourceNames();
             if (dsNames != null) {
-                logger.info("开始关闭数据源（待关闭 " + dsNames.size() + " 个）");
+                logger.info("close data source （count: " + dsNames.size() + " ）");
                 Map<String, Object> failure = new HashMap<>();
 
                 for (String dsName : dsNames) {
@@ -163,15 +156,15 @@ public class DataSourceHolder extends BaseComponent {
                         }
                     } else {
                         failure.put(dsName, datasource.getClass().getName());
-                        logger.warn("不支持关闭此类型的数据源（name=" + dsName + "，class=" + datasource.getClass().getName() + "）");
+                        logger.warn("not support close data source （name=" + dsName + "，class=" + datasource.getClass().getName() + "）");
                     }
                 }
 
                 if (failure.size() != 0) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc(dsNames.size() - failure.size() + " 个数据源关闭失败：" + failure));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc(dsNames.size() - failure.size() + " data sources close failed ：" + failure));
                 }
 
-                logger.info("所有数据源均关闭完成（共计 " + dsNames.size() + " 个）");
+                logger.info("data source closed（count: " + dsNames.size() + " ）");
             }
         } finally {
             currDataSource.remove();

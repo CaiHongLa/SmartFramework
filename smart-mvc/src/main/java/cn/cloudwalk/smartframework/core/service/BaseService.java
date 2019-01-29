@@ -6,7 +6,6 @@ import cn.cloudwalk.smartframework.common.exception.exception.FrameworkInternalS
 import cn.cloudwalk.smartframework.common.mvc.MvcComponent;
 import cn.cloudwalk.smartframework.common.mvc.dao.IBaseDao;
 import cn.cloudwalk.smartframework.common.mvc.service.IBaseService;
-import org.springframework.stereotype.Service;
 
 import java.io.Serializable;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.List;
 /**
  * @author LIYANHUI
  */
-@Service("baseService")
 public class BaseService<Entity extends BaseDomain, Pk extends Serializable> extends MvcComponent implements IBaseService<Entity, Pk> {
 
     @Override
@@ -74,6 +72,6 @@ public class BaseService<Entity extends BaseDomain, Pk extends Serializable> ext
 
     @Override
     public IBaseDao<Entity, Pk> getDefaultDao() {
-        throw new FrameworkInternalSystemException(new SystemExceptionDesc("如果 Controller 中要使用 BaseService 提供的预置服务，则必须在 Service 下实现 getDefaultDao() 方法来指定默认的 IDao 提供者"));
+        throw new FrameworkInternalSystemException(new SystemExceptionDesc("getDefaultDao() not override"));
     }
 }

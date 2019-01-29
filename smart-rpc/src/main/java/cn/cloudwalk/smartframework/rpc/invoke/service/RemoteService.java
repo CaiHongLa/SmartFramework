@@ -2,6 +2,7 @@ package cn.cloudwalk.smartframework.rpc.invoke.service;
 
 
 import cn.cloudwalk.smartframework.common.BaseComponent;
+import cn.cloudwalk.smartframework.common.distributed.IRemoteService;
 import cn.cloudwalk.smartframework.common.distributed.IZookeeperService;
 import cn.cloudwalk.smartframework.common.distributed.provider.DistributedServiceProvider;
 import cn.cloudwalk.smartframework.common.distributed.provider.HttpServiceProvider;
@@ -13,7 +14,6 @@ import cn.cloudwalk.smartframework.common.util.JsonUtil;
 import cn.cloudwalk.smartframework.common.util.http.async.AsyncCallback;
 import cn.cloudwalk.smartframework.common.util.http.async.AsyncExecuteResult;
 import cn.cloudwalk.smartframework.common.util.http.bean.*;
-import cn.cloudwalk.smartframework.rpc.invoke.IRemoteService;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -194,7 +194,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
 
     private ProtocolOutResponse processSync(String serviceUrl, Object params, HTTP_CONTENT_TRANSFER_TYPE transferType, RequestConfig requestConfig, boolean responseDirectly) {
         if (!serviceUrl.contains(":")) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("无效的 url：" + serviceUrl + "，正确语法为：'组件编号:接口路径'"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("Invalid url：" + serviceUrl + "，for example 'zookeeperId:serviceUrl'"));
         } else {
             String[] part = serviceUrl.split(":");
             String zookeeperId = part[0];
@@ -206,7 +206,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
             IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
             ProtocolOutResponse response = null;
             if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + "" + api;
+                String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + api;
                 DistributedServiceProvider node = this.zookeeperService.getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.HTTP);
                 if (node instanceof HttpServiceProvider) {
                     String fullUrl = ((HttpServiceProvider) node).buildUrl();
@@ -220,7 +220,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
                     }
                     response.setMetadata(metadata);
                 } else {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("HTTP调用方式获取节点错误！"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("HTTP model request error！"));
                 }
             } else if (runningMode == IZookeeperService.RUNNING_MODE.STANDALONE) {
                 ServletContext context = getServletContext();
@@ -237,7 +237,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
 
                     response.setMetadata(metadata);
                 } else {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("当前应用没有部署到Servlet容器，因此无法调用本机Http服务！"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("Servlet is null！"));
                 }
             }
             return response;
@@ -250,12 +250,12 @@ public class RemoteService extends BaseComponent implements IRemoteService {
             for (ProtocolHttpRequest protocolRequest : request) {
                 String serviceUrl = protocolRequest.getServiceUrl();
                 if (!serviceUrl.contains(":")) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("无效的 url：" + serviceUrl + "，正确语法为：'组件编号:接口路径'"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("Invalid url：" + serviceUrl + "，for example 'zookeeperId:serviceUrl'"));
                 }
 
                 if (protocolRequest.getTransferType() == null) {
                     protocolRequest.setTransferType(HTTP_CONTENT_TRANSFER_TYPE.KEY_VALUE);
-                    logger.info("请求 " + protocolRequest.getServiceUrl() + " 的 HTTP_TRANSFER_TYPE 未指定，已使用默认值 KEY_VALUE");
+                    logger.info("request " + protocolRequest.getServiceUrl() + " not set HTTP_TRANSFER_TYPE ，use KEY_VALUE");
                 }
 
                 String[] part = serviceUrl.split(":");
@@ -267,14 +267,14 @@ public class RemoteService extends BaseComponent implements IRemoteService {
 
                 IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
                 if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                    String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + "" + api;
+                    String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + api;
                     DistributedServiceProvider node = this.zookeeperService.getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.HTTP);
                     if (node instanceof HttpServiceProvider) {
                         HttpServiceProvider httpServiceProvider = (HttpServiceProvider) node;
                         HttpRequest req = new HttpRequest(protocolRequest.getCode(), httpServiceProvider.buildUrl(), protocolRequest.getParams(), protocolRequest.getTransferType());
                         requestList.add(req);
                     } else {
-                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("HTTP调用方式获取节点错误！"));
+                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("HTTP model request error！"));
                     }
                 } else if (runningMode == IZookeeperService.RUNNING_MODE.STANDALONE) {
                     ServletContext context = getServletContext();
@@ -283,14 +283,14 @@ public class RemoteService extends BaseComponent implements IRemoteService {
                         HttpRequest req = new HttpRequest(protocolRequest.getCode(), url, protocolRequest.getParams(), protocolRequest.getTransferType());
                         requestList.add(req);
                     } else {
-                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("当前应用没有部署到Servlet容器，因此无法调用本机Http服务！"));
+                        throw new FrameworkInternalSystemException(new SystemExceptionDesc("Servlet is null！"));
                     }
                 }
             }
-            logger.info("准备发起 " + requestList.size() + " 个请求，请求列表为：" + requestList);
+            logger.info("ready to send " + requestList.size() + " requests：" + requestList);
             return HttpUtil.Sync.request(requestList, false, requestConfig, asyncCallback);
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("没有包含任何请求"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("empty request list"));
         }
     }
 
@@ -300,7 +300,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
 
     private ProtocolOutResponse processSyncMultipart(String serviceUrl, Map<String, File> files, Map<String, Object> params, boolean responseDirectly) {
         if (!serviceUrl.contains(":")) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("无效的 url：" + serviceUrl + "，正确语法为：'组件编号:接口路径'"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("Invalid url：" + serviceUrl + "，for example 'zookeeperId:serviceUrl'"));
         } else {
             String[] part = serviceUrl.split(":");
             String zookeeperId = part[0];
@@ -313,7 +313,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
             ProtocolOutResponse response = null;
 
             if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + "" + api;
+                String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + api;
                 DistributedServiceProvider node = this.zookeeperService.getBestServiceProvider(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.HTTP);
                 if (node instanceof HttpServiceProvider) {
                     String fullUrl = ((HttpServiceProvider) node).buildUrl();
@@ -327,7 +327,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
                     }
                     response.setMetadata(metadata);
                 } else {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("HTTP调用方式获取节点错误！"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("HTTP model request error！"));
                 }
             } else if (runningMode == IZookeeperService.RUNNING_MODE.STANDALONE) {
                 ServletContext context = getServletContext();
@@ -344,7 +344,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
 
                     response.setMetadata(metadata);
                 } else {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("当前应用没有部署到Servlet容器，因此无法调用本机Http服务！"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("Servlet is null！"));
                 }
             }
             return response;
@@ -357,12 +357,12 @@ public class RemoteService extends BaseComponent implements IRemoteService {
             for (ProtocolHttpRequest protocolRequest : request) {
                 String serviceUrl = protocolRequest.getServiceUrl();
                 if (!serviceUrl.contains(":")) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("无效的 url：" + serviceUrl + "，正确语法为：'组件编号:接口路径'"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("Invalid url：" + serviceUrl + "，for example 'zookeeperId:serviceUrl'"));
                 }
 
                 if (protocolRequest.getTransferType() == null) {
                     protocolRequest.setTransferType(HTTP_CONTENT_TRANSFER_TYPE.KEY_VALUE);
-                    logger.info("请求 " + protocolRequest.getServiceUrl() + " 的 HTTP_TRANSFER_TYPE 未指定，已使用默认值 KEY_VALUE");
+                    logger.info("request " + protocolRequest.getServiceUrl() + " not set HTTP_TRANSFER_TYPE ，use KEY_VALUE");
                 }
 
                 String[] part = serviceUrl.split(":");
@@ -374,7 +374,7 @@ public class RemoteService extends BaseComponent implements IRemoteService {
 
                 IZookeeperService.RUNNING_MODE runningMode = this.zookeeperService.getRunningMode();
                 if (runningMode == IZookeeperService.RUNNING_MODE.DISTRIBUTED) {
-                    String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + "" + api;
+                    String zookeeperPath = zookeeperService.getHttpServicePath() + "/" + zookeeperId + api;
                     List<DistributedServiceProvider> nodes = this.zookeeperService.getAvailableServiceList(zookeeperPath, IZookeeperService.REMOTE_SERVICE_TYPE.HTTP);
                     if(nodes != null && !nodes.isEmpty()){
                         for(DistributedServiceProvider node : nodes){
@@ -383,21 +383,21 @@ public class RemoteService extends BaseComponent implements IRemoteService {
                                 HttpRequest req = new HttpRequest(protocolRequest.getCode(), httpServiceProvider.buildUrl(), protocolRequest.getParams(), protocolRequest.getTransferType());
                                 requestList.add(req);
                             } else {
-                                throw new FrameworkInternalSystemException(new SystemExceptionDesc("HTTP调用方式获取节点错误！"));
+                                throw new FrameworkInternalSystemException(new SystemExceptionDesc("HTTP model request error！"));
                             }
                         }
                     } else {
-                        logger.error(zookeeperPath + " 无可用服务提供者，请确定该服务是否还有在运行的提供者实例，或者该服务地址是否正确");
-                        throw new FrameworkInternalSystemException(new SystemExceptionDesc(zookeeperPath + " 无可用服务提供者，请确定该服务是否还有在运行的提供者实例，或者该服务地址是否正确"));
+                        logger.error(zookeeperPath + " no available service provider, make sure that the service still has a running provider instance, or that the service address is correct");
+                        throw new FrameworkInternalSystemException(new SystemExceptionDesc(zookeeperPath + "no available service provider, make sure that the service still has a running provider instance, or that the service address is correct"));
                     }
                 } else if (runningMode == IZookeeperService.RUNNING_MODE.STANDALONE) {
-                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE模式不支持广播调用！"));
+                    throw new FrameworkInternalSystemException(new SystemExceptionDesc("STANDALONE model not support broadcast！"));
                 }
             }
-            logger.info("准备发起 " + requestList.size() + " 个请求，请求列表为：" + requestList);
+            logger.info("ready to send " + requestList.size() + " requests：" + requestList);
             return HttpUtil.Sync.request(requestList, false, requestConfig, asyncCallback);
         } else {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("没有包含任何请求"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("empty request list"));
         }
     }
 }

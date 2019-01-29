@@ -26,6 +26,6 @@ public abstract class SystemException extends BaseException {
 
     @Override
     public String defShortName() {
-        return "系统异常";
+        return "System Exception";
     }
 }

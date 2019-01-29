@@ -11,6 +11,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Map;
 
 /**
@@ -53,7 +54,7 @@ public class XmlUtil {
         BufferedReader xmlFileReader = null;
 
         try {
-            xmlFileReader = new BufferedReader(new InputStreamReader(new FileInputStream(xmlFile), "utf-8"));
+            xmlFileReader = new BufferedReader(new InputStreamReader(new FileInputStream(xmlFile), StandardCharsets.UTF_8));
             StringBuilder xmlStringBuilder = new StringBuilder();
             String xmlLine;
 
@@ -63,14 +64,14 @@ public class XmlUtil {
 
             return xmlStringBuilder.toString();
         } catch (IOException e) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("文件读取异常：" + e));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("read file error：" + e));
         } finally {
             try {
                 if (xmlFileReader != null) {
                     xmlFileReader.close();
                 }
             } catch (IOException e) {
-                logger.error("文件关闭异常：" + e);
+                logger.error("close file error：" + e);
             }
 
         }

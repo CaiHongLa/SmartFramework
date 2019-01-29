@@ -15,6 +15,6 @@ public class DomainDefinitionException extends JdbcException {
 
     @Override
     public String defShortName() {
-        return "实体定义异常";
+        return "Domain Define Exception";
     }
 }

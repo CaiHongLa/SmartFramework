@@ -4,6 +4,9 @@
          updateCheck="false" monitoring="autodetect"
          dynamicConfig="true">
 
+    <defaultCache name="default_cache" maxElementsInMemory="1000" eternal="false" timeToIdleSeconds="300" timeToLiveSeconds="600"
+                  overflowToDisk="false" maxElementsOnDisk="100000" />
+
     <cache name="annotation_method_cache"
            overflowToDisk="false"
            maxElementsInMemory="1000"

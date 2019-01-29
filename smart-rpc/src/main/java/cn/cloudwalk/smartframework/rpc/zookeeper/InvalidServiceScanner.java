@@ -44,12 +44,12 @@ public class InvalidServiceScanner extends BaseComponent {
     @PostConstruct
     public void init() {
         if (this.getRunningMode() == IZookeeperService.RUNNING_MODE.STANDALONE) {
-            logger.info("当前组件以 standalone 模式运行，因此不执行 " + this.getClass().getSimpleName());
+            logger.info("The current component is running in standalone mode, so it does not perform " + this.getClass().getSimpleName());
         } else {
             String configCenterStr = this.distributedMutexLockService.getZookeeperService().getZookeeperConfig().getProperty("zookeeper.config.center");
             if (TextUtil.isNotEmpty(configCenterStr) && "true".equals(configCenterStr)) {
                 configCenter = true;
-                logger.info("发现当前组件配置了配置中心服务，已启动无效服务扫描任务");
+                logger.info("Found that the current component configured the configuration center service, and the invalid service scan task was started.");
             } else {
                 return;
             }
@@ -66,11 +66,11 @@ public class InvalidServiceScanner extends BaseComponent {
     @Async
     public void run() {
         if (this.getRunningMode() == IZookeeperService.RUNNING_MODE.STANDALONE) {
-            logger.info("当前组件以 standalone 模式运行，因此此次不执行 " + this.getClass().getSimpleName());
+            logger.info("The current component is running in standalone mode, so it does not perform " + this.getClass().getSimpleName());
         } else {
             if (configCenter) {
                 int delay = this.random.nextInt(this.MAX_DELAY_SECONDS);
-                logger.info("无效服务扫描任务准备于 " + delay + "s 后执行");
+                logger.info("Invalid service scan task is ready for execution after " + delay + "S.");
 
                 try {
                     Thread.sleep((long) delay * 1000L);
@@ -84,17 +84,17 @@ public class InvalidServiceScanner extends BaseComponent {
                         IZookeeperService zookeeperService = this.distributedMutexLockService.getZookeeperService();
                         List<String> list = this.distributedMutexLockService.getZookeeperService().getInvalidService();
                         if (list != null && list.size() > 0) {
-                            logger.info("发现 " + list.size() + " 个无效服务，有 " + list + "，开始删除");
+                            logger.info("Found " + list.size() + " invalid services: " + list + "，begin to delete");
                             for (String path : list) {
-                                logger.info("正在删除无效服务 " + path);
+                                logger.info("Deleting invalid service " + path);
                                 zookeeperService.deletePath(path);
-                                logger.info("无效服务 " + path + " 删除成功");
+                                logger.info("Invalid service " + path + " deleted");
                             }
-                            logger.info("所有无效服务删除成功");
+                            logger.info("All invalid services were deleted successfully.");
                         } else {
-                            logger.info("没有待删除的无效服务");
+                            logger.info("Invalid service not deleted");
                         }
-                        logger.info("目前Zookeeper服务树如下：\n" + zookeeperService.getTreeInfoAsString(zookeeperService.getRootPath()));
+                        logger.info("At present, the Zookeeper service tree is as follows：\n" + zookeeperService.getTreeInfoAsString(zookeeperService.getRootPath()));
                     } catch (Exception e) {
                         throw new FrameworkInternalSystemException(new SystemExceptionDesc(e));
                     } finally {

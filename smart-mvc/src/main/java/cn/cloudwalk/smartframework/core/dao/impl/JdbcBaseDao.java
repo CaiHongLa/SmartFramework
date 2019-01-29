@@ -23,7 +23,6 @@ import org.springframework.jdbc.core.namedparam.EmptySqlParameterSource;
 import org.springframework.jdbc.core.namedparam.NamedParameterJdbcTemplate;
 import org.springframework.jdbc.support.GeneratedKeyHolder;
 import org.springframework.jdbc.support.KeyHolder;
-import org.springframework.stereotype.Repository;
 
 import java.io.Serializable;
 import java.lang.reflect.ParameterizedType;
@@ -33,7 +32,7 @@ import java.util.*;
 /**
  * @author LIYANHUI
  */
-@Repository("jdbcBaseDao")
+//@Repository("jdbcBaseDao")
 public class JdbcBaseDao<Entity extends BaseDomain, Pk extends Serializable> extends MvcComponent implements IJdbcBaseDao<Entity, Pk> {
 
     private static final Logger logger = LogManager.getLogger(JdbcBaseDao.class);
@@ -548,7 +547,7 @@ public class JdbcBaseDao<Entity extends BaseDomain, Pk extends Serializable> ext
 
     private NamedParameterJdbcTemplate getNamedParameterJdbcTemplate() {
         if (this.namedParameterJdbcTemplate == null) {
-            throw new FrameworkInternalSystemException(new SystemExceptionDesc("配置错误：web.xml 中没有配置 spring.profiles.active 或其值为 temporary，该模式下 jdbc 功能将被禁用。如需使用 jdbc，请指定其值为 standard"));
+            throw new FrameworkInternalSystemException(new SystemExceptionDesc("error：spring.profiles.active is not standard"));
         } else {
             return this.namedParameterJdbcTemplate;
         }
